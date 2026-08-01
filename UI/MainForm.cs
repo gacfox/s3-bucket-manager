@@ -932,7 +932,8 @@ namespace Gacfox.S3BucketManager.UI
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            using var dialog = new AboutDialog();
+            dialog.ShowDialog(this);
         }
 
         private void uploadToolStripButton_Click(object sender, EventArgs e) => StartUpload();

@@ -55,6 +55,7 @@
             aboutLinkLabel.TabIndex = 1;
             aboutLinkLabel.TabStop = true;
             aboutLinkLabel.Text = "https://github.com/gacfox/s3-bucket-manager";
+            aboutLinkLabel.LinkClicked += aboutLinkLabel_LinkClicked;
             // 
             // aboutLinkTitleLabel
             // 
@@ -86,7 +87,10 @@
             Controls.Add(aboutTitleLabel);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "AboutDialog";
+            StartPosition = FormStartPosition.CenterParent;
             Text = "关于";
             ((System.ComponentModel.ISupportInitialize)logoPictureBox).EndInit();
             ResumeLayout(false);

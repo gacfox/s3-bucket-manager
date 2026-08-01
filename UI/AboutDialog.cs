@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,12 @@ namespace Gacfox.S3BucketManager.UI
         public AboutDialog()
         {
             InitializeComponent();
+        }
+
+        private void aboutLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/gacfox/s3-bucket-manager")
+            { UseShellExecute = true });
         }
     }
 }

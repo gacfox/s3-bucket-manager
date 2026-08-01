@@ -530,7 +530,7 @@ namespace Gacfox.S3BucketManager.UI
             item.ListView?.Invalidate(item.GetBounds(ItemBoundsPortion.Entire));
         }
 
-        private void OnTransferTaskFinished(TransferTask task)
+        private async void OnTransferTaskFinished(TransferTask task)
         {
             if (_taskRows.TryGetValue(task.Id, out var item))
             {
@@ -544,6 +544,12 @@ namespace Gacfox.S3BucketManager.UI
             done.SubItems.Add(task.FinishTime.ToString("yyyy-MM-dd HH:mm:ss"));
             done.ToolTipText = task.ErrorMessage ?? "";
             completeTabPageListView.Items.Add(done);
+            if (task.Direction == TransferDirection.Upload
+                && uploadTabPageListView.Items.Count == 0
+                && task.BucketName == _currentBucket)
+            {
+                await RefreshCurrentViewAsync();
+            }
         }
 
         private static string StatusText(TransferTask task) => task.Status switch

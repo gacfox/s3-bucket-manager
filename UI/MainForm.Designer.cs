@@ -291,7 +291,7 @@
             // newConnectionToolStripButton
             // 
             newConnectionToolStripButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            newConnectionToolStripButton.Image = Properties.Resources.package_add;
+            newConnectionToolStripButton.Image = Properties.Resources.add;
             newConnectionToolStripButton.ImageTransparentColor = Color.Magenta;
             newConnectionToolStripButton.Name = "newConnectionToolStripButton";
             newConnectionToolStripButton.Size = new Size(23, 22);

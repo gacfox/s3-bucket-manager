@@ -29,6 +29,12 @@ namespace Gacfox.S3BucketManager.UI
         private string? _activeSearch;
         private int _loadVersion;
 
+        private const int TaskProgressColumnIndex = 2;
+        private const int TaskActionColumnIndex = 4;
+        private TransferManager _transferManager = null!;
+        private readonly Dictionary<Guid, ListViewItem> _taskRows = new();
+        private ImageList _actionImageList = null!;
+
         public MainForm()
         {
             InitializeComponent();
@@ -49,6 +55,21 @@ namespace Gacfox.S3BucketManager.UI
                 largeImageList.Images.Add(new Bitmap(source, largeImageList.ImageSize));
             fileListView.LargeImageList = largeImageList;
             SetFileView(View.Details);
+
+            _actionImageList = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
+            _actionImageList.Images.Add(Properties.Resources.pause_blue);
+            _actionImageList.Images.Add(Properties.Resources.resultset_next);
+            _actionImageList.Images.Add(Properties.Resources.stop_blue);
+            SetupTaskListView(uploadTabPageListView);
+            SetupTaskListView(downloadTabPageListView);
+            completeTabPageListView.View = View.Details;
+            completeTabPageListView.FullRowSelect = true;
+            completeTabPageListView.ShowItemToolTips = true;
+            completeTabPageListView.Columns.Add("方向", 50);
+            completeTabPageListView.Columns.Add("名称", 240);
+            completeTabPageListView.Columns.Add("大小", 80, HorizontalAlignment.Right);
+            completeTabPageListView.Columns.Add("状态", 70);
+            completeTabPageListView.Columns.Add("完成时间", 130);
         }
 
         protected override void OnLoad(EventArgs e)
@@ -66,6 +87,11 @@ namespace Gacfox.S3BucketManager.UI
             }
             foreach (var profile in _store.Connections)
                 bucketTreeView.Nodes.Add(CreateConnectionNode(profile));
+            _transferManager = new TransferManager(_store);
+            _transferManager.TaskAdded += t => BeginInvoke(new Action(() => OnTransferTaskAdded(t)));
+            _transferManager.TaskUpdated += t => BeginInvoke(new Action(() => OnTransferTaskUpdated(t)));
+            _transferManager.TaskFinished += t => BeginInvoke(new Action(() => OnTransferTaskFinished(t)));
+            SetTransferButtonsEnabled(false);
         }
 
         private void newConnectionToolStripMenuItem_Click(object sender, EventArgs e) => AddConnection();
@@ -241,10 +267,12 @@ namespace Gacfox.S3BucketManager.UI
                 fileListView.EndUpdate();
                 fileStatusToolStripStatusLabel.Text = $"共 {fileListView.Items.Count} 项"
                     + (response.IsTruncated == true ? "（结果过多，仅显示前1000项）" : "");
+                SetTransferButtonsEnabled(true);
             }
             catch (Exception ex)
             {
                 if (version != _loadVersion) return;
+                SetTransferButtonsEnabled(false);
                 MessageBox.Show(this, $"加载失败：{ex.Message}", "错误",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -300,20 +328,212 @@ namespace Gacfox.S3BucketManager.UI
             useDetailToolStripMenuItem.Checked = view == View.Details;
         }
 
+        private void StartUpload()
+        {
+            if (_currentBucket == null || _currentProfile == null) return;
+            using var dialog = new OpenFileDialog { Title = "选择要上传的文件", Multiselect = true };
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            foreach (var file in dialog.FileNames)
+            {
+                _transferManager.Enqueue(new TransferTask
+                {
+                    Direction = TransferDirection.Upload,
+                    Profile = _currentProfile,
+                    BucketName = _currentBucket,
+                    DisplayName = Path.GetFileName(file),
+                    LocalFilePath = file,
+                    Key = _currentPrefix + Path.GetFileName(file),
+                    TotalBytes = new FileInfo(file).Length
+                });
+            }
+            taskTabControl.SelectedTab = uploadTabPage;
+        }
+
+        private void StartDownload()
+        {
+            if (_currentBucket == null || _currentProfile == null) return;
+            if (fileListView.CheckedItems.Count == 0)
+            {
+                mainStripStatusLabel.Text = "请先勾选要下载的文件或文件夹";
+                return;
+            }
+            using var dialog = new FolderBrowserDialog { Description = "选择下载保存位置" };
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            foreach (ListViewItem item in fileListView.CheckedItems)
+            {
+                item.Checked = false;
+                TransferTask? task = null;
+                if (item.Tag is string folderPrefix)
+                {
+                    var folderName = folderPrefix.TrimEnd('/').Split('/').Last();
+                    task = new TransferTask
+                    {
+                        Direction = TransferDirection.Download,
+                        Profile = _currentProfile,
+                        BucketName = _currentBucket,
+                        DisplayName = folderName,
+                        SourcePrefix = folderPrefix,
+                        LocalTargetPath = Path.Combine(dialog.SelectedPath, folderName)
+                    };
+                }
+                else if (item.Tag is S3Object obj)
+                {
+                    var fileName = obj.Key.Split('/').Last();
+                    task = new TransferTask
+                    {
+                        Direction = TransferDirection.Download,
+                        Profile = _currentProfile,
+                        BucketName = _currentBucket,
+                        DisplayName = fileName,
+                        Key = obj.Key,
+                        TotalBytes = obj.Size ?? 0,
+                        LocalTargetPath = Path.Combine(dialog.SelectedPath, fileName)
+                    };
+                }
+                if (task != null) _transferManager.Enqueue(task);
+            }
+            taskTabControl.SelectedTab = downloadTabPage;
+        }
+
+        private void SetTransferButtonsEnabled(bool enabled)
+        {
+            uploadToolStripButton.Enabled = uploadToolStripMenuItem.Enabled = enabled;
+            downloadToolStripButton.Enabled = downloadToolStripMenuItem.Enabled = enabled;
+        }
+
+        private void SetupTaskListView(ListView listView)
+        {
+            listView.View = View.Details;
+            listView.FullRowSelect = true;
+            listView.ShowItemToolTips = true;
+            listView.OwnerDraw = true;
+            listView.Columns.Add("名称", 240);
+            listView.Columns.Add("大小", 80, HorizontalAlignment.Right);
+            listView.Columns.Add("进度", 110);
+            listView.Columns.Add("状态", 70);
+            listView.Columns.Add("操作", 50);
+            listView.DrawColumnHeader += taskListView_DrawColumnHeader;
+            listView.DrawItem += taskListView_DrawItem;
+            listView.DrawSubItem += taskListView_DrawSubItem;
+            listView.MouseClick += taskListView_MouseClick;
+        }
+
+        private void taskListView_DrawColumnHeader(object? sender, DrawListViewColumnHeaderEventArgs e)
+            => e.DrawDefault = true;
+
+        private void taskListView_DrawItem(object? sender, DrawListViewItemEventArgs e)
+            => e.DrawDefault = true;
+
+        private void taskListView_DrawSubItem(object? sender, DrawListViewSubItemEventArgs e)
+        {
+            if (e.Item?.Tag is not TransferTask task
+                || (e.ColumnIndex != TaskProgressColumnIndex && e.ColumnIndex != TaskActionColumnIndex))
+            {
+                e.DrawDefault = true;
+                return;
+            }
+            using (var brush = new SolidBrush(e.Item.Selected ? SystemColors.Highlight : SystemColors.Window))
+                e.Graphics.FillRectangle(brush, e.Bounds);
+            if (e.ColumnIndex == TaskProgressColumnIndex)
+            {
+                var percent = task.TotalBytes > 0 ? (int)(task.TransferredBytes * 100 / task.TotalBytes) : 0;
+                var barBounds = new Rectangle(e.Bounds.X + 2, e.Bounds.Y + 3, e.Bounds.Width - 4, e.Bounds.Height - 6);
+                if (ProgressBarRenderer.IsSupported)
+                {
+                    ProgressBarRenderer.DrawHorizontalBar(e.Graphics, barBounds);
+                    if (percent > 0)
+                        ProgressBarRenderer.DrawHorizontalChunks(e.Graphics,
+                            new Rectangle(barBounds.X, barBounds.Y, barBounds.Width * percent / 100, barBounds.Height));
+                }
+                TextRenderer.DrawText(e.Graphics, $"{percent}%", ((ListView)sender!).Font, e.Bounds,
+                    e.Item.Selected ? SystemColors.HighlightText : SystemColors.WindowText,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
+            else
+            {
+                var y = e.Bounds.Y + (e.Bounds.Height - 16) / 2;
+                _actionImageList.Draw(e.Graphics, e.Bounds.X + 4, y,
+                    task.Status == TransferStatus.Paused ? 1 : 0);
+                _actionImageList.Draw(e.Graphics, e.Bounds.X + 24, y, 2);
+            }
+        }
+
+        private void taskListView_MouseClick(object? sender, MouseEventArgs e)
+        {
+            var listView = (ListView)sender!;
+            var hit = listView.HitTest(e.Location);
+            if (hit.Item?.Tag is not TransferTask task) return;
+            if (hit.SubItem != hit.Item.SubItems[TaskActionColumnIndex]) return;
+            if (e.X - hit.SubItem.Bounds.X < 20)
+            {
+                if (task.Status is TransferStatus.Running or TransferStatus.Pending)
+                    _transferManager.Pause(task);
+                else if (task.Status == TransferStatus.Paused)
+                    _transferManager.Resume(task);
+            }
+            else
+            {
+                _transferManager.Stop(task);
+            }
+        }
+
+        private void OnTransferTaskAdded(TransferTask task)
+        {
+            var listView = task.Direction == TransferDirection.Upload
+                ? uploadTabPageListView : downloadTabPageListView;
+            var item = new ListViewItem(task.DisplayName) { Tag = task };
+            item.SubItems.Add(FormatSize(task.TotalBytes));
+            item.SubItems.Add("");
+            item.SubItems.Add(StatusText(task));
+            item.SubItems.Add("");
+            _taskRows[task.Id] = item;
+            listView.Items.Add(item);
+        }
+
+        private void OnTransferTaskUpdated(TransferTask task)
+        {
+            if (!_taskRows.TryGetValue(task.Id, out var item)) return;
+            item.SubItems[1].Text = FormatSize(task.TotalBytes);
+            item.SubItems[3].Text = StatusText(task);
+            item.ToolTipText = task.ErrorMessage ?? "";
+            item.ListView?.Invalidate(item.GetBounds(ItemBoundsPortion.Entire));
+        }
+
+        private void OnTransferTaskFinished(TransferTask task)
+        {
+            if (_taskRows.TryGetValue(task.Id, out var item))
+            {
+                item.Remove();
+                _taskRows.Remove(task.Id);
+            }
+            var done = new ListViewItem(task.Direction == TransferDirection.Upload ? "上传" : "下载") { Tag = task };
+            done.SubItems.Add(task.DisplayName);
+            done.SubItems.Add(FormatSize(task.TotalBytes));
+            done.SubItems.Add(StatusText(task));
+            done.SubItems.Add(task.FinishTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            done.ToolTipText = task.ErrorMessage ?? "";
+            completeTabPageListView.Items.Add(done);
+        }
+
+        private static string StatusText(TransferTask task) => task.Status switch
+        {
+            TransferStatus.Pending => "等待中",
+            TransferStatus.Running => task.Direction == TransferDirection.Upload ? "上传中" : "下载中",
+            TransferStatus.Paused => "已暂停",
+            TransferStatus.Completed => "已完成",
+            TransferStatus.Stopped => "已停止",
+            TransferStatus.Failed => "失败",
+            _ => ""
+        };
+
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
         }
 
-        private void uploadToolStripMenuItem_Click(object sender, EventArgs e)
-        {
+        private void uploadToolStripMenuItem_Click(object sender, EventArgs e) => StartUpload();
 
-        }
-
-        private void downloadToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-        }
+        private void downloadToolStripMenuItem_Click(object sender, EventArgs e) => StartDownload();
 
         private void selectAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -355,15 +575,9 @@ namespace Gacfox.S3BucketManager.UI
 
         }
 
-        private void uploadToolStripButton_Click(object sender, EventArgs e)
-        {
+        private void uploadToolStripButton_Click(object sender, EventArgs e) => StartUpload();
 
-        }
-
-        private void downloadToolStripButton_Click(object sender, EventArgs e)
-        {
-
-        }
+        private void downloadToolStripButton_Click(object sender, EventArgs e) => StartDownload();
 
         private void selectAlltoolStripButton_Click(object sender, EventArgs e)
         {

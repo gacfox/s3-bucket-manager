@@ -82,6 +82,7 @@
             downloadTabPage = new TabPage();
             downloadTabPageListView = new ListView();
             completeTabPage = new TabPage();
+            completeTabPageListView = new ListView();
             mainMenuStrip.SuspendLayout();
             mainToolStrip.SuspendLayout();
             mainStatusStrip.SuspendLayout();
@@ -98,6 +99,7 @@
             taskTabControl.SuspendLayout();
             uploadTabPage.SuspendLayout();
             downloadTabPage.SuspendLayout();
+            completeTabPage.SuspendLayout();
             SuspendLayout();
             // 
             // mainMenuStrip
@@ -558,6 +560,7 @@
             // 
             // completeTabPage
             // 
+            completeTabPage.Controls.Add(completeTabPageListView);
             completeTabPage.Location = new Point(4, 26);
             completeTabPage.Name = "completeTabPage";
             completeTabPage.Padding = new Padding(3);
@@ -565,6 +568,15 @@
             completeTabPage.TabIndex = 3;
             completeTabPage.Text = "已完成任务列表";
             completeTabPage.UseVisualStyleBackColor = true;
+            // 
+            // completeTabPageListView
+            // 
+            completeTabPageListView.Dock = DockStyle.Fill;
+            completeTabPageListView.Location = new Point(3, 3);
+            completeTabPageListView.Name = "completeTabPageListView";
+            completeTabPageListView.Size = new Size(786, 76);
+            completeTabPageListView.TabIndex = 0;
+            completeTabPageListView.UseCompatibleStateImageBehavior = false;
             // 
             // MainForm
             // 
@@ -601,6 +613,7 @@
             taskTabControl.ResumeLayout(false);
             uploadTabPage.ResumeLayout(false);
             downloadTabPage.ResumeLayout(false);
+            completeTabPage.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -660,5 +673,6 @@
         private ToolStripButton refreshToolStripButton;
         private ToolStripStatusLabel fileStatusToolStripStatusLabel;
         private TabPage completeTabPage;
+        private ListView completeTabPageListView;
     }
 }

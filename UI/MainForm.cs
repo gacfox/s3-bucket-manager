@@ -782,8 +782,13 @@ namespace Gacfox.S3BucketManager.UI
                 oldName = obj.Key.Split('/').Last();
             }
             else return;
-            var newName = InputDialog.Show(this, "重命名", "请输入新名称：", oldName);
-            if (string.IsNullOrWhiteSpace(newName) || newName == oldName) return;
+            string newName;
+            using (var dialog = new RenameDialog(oldName))
+            {
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                newName = dialog.NewName;
+            }
+            if (newName.Length == 0 || newName == oldName) return;
             if (newName.Contains('/'))
             {
                 MessageBox.Show(this, "名称不能包含“/”。", "提示",

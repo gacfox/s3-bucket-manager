@@ -32,7 +32,7 @@ namespace Gacfox.S3BucketManager.UI
             {
                 using var client = S3ClientFactory.Create(BuildProfile(), BuildCredentials());
                 var response = await client.ListBucketsAsync();
-                MessageBox.Show(this, $"连接成功，共 {response.Buckets.Count} 个存储桶。", "测试连接",
+                MessageBox.Show(this, $"连接成功，共 {response.Buckets?.Count ?? 0} 个存储桶。", "测试连接",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)

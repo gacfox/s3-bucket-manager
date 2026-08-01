@@ -81,6 +81,7 @@
             uploadTabPageListView = new ListView();
             downloadTabPage = new TabPage();
             downloadTabPageListView = new ListView();
+            completeTabPage = new TabPage();
             mainMenuStrip.SuspendLayout();
             mainToolStrip.SuspendLayout();
             mainStatusStrip.SuspendLayout();
@@ -444,6 +445,7 @@
             bucketTreeView.Name = "bucketTreeView";
             bucketTreeView.Size = new Size(266, 262);
             bucketTreeView.TabIndex = 0;
+            bucketTreeView.NodeMouseClick += bucketTreeView_NodeMouseClick;
             bucketTreeView.NodeMouseDoubleClick += bucketTreeView_NodeMouseDoubleClick;
             // 
             // fileStatusStrip
@@ -463,12 +465,14 @@
             // 
             // fileListView
             // 
+            fileListView.CheckBoxes = true;
             fileListView.Dock = DockStyle.Fill;
             fileListView.Location = new Point(0, 23);
             fileListView.Name = "fileListView";
             fileListView.Size = new Size(530, 239);
             fileListView.TabIndex = 1;
             fileListView.UseCompatibleStateImageBehavior = false;
+            fileListView.DoubleClick += fileListView_DoubleClick;
             // 
             // fileInfoPanel
             // 
@@ -488,6 +492,7 @@
             locationTextBox.Size = new Size(430, 23);
             locationTextBox.TabIndex = 0;
             locationTextBox.Text = "/";
+            locationTextBox.KeyDown += locationTextBox_KeyDown;
             // 
             // searchTextBox
             // 
@@ -497,11 +502,13 @@
             searchTextBox.PlaceholderText = "按名称前缀过滤...";
             searchTextBox.Size = new Size(100, 23);
             searchTextBox.TabIndex = 1;
+            searchTextBox.KeyDown += searchTextBox_KeyDown;
             // 
             // taskTabControl
             // 
             taskTabControl.Controls.Add(uploadTabPage);
             taskTabControl.Controls.Add(downloadTabPage);
+            taskTabControl.Controls.Add(completeTabPage);
             taskTabControl.Dock = DockStyle.Fill;
             taskTabControl.Location = new Point(0, 0);
             taskTabControl.Name = "taskTabControl";
@@ -548,6 +555,16 @@
             downloadTabPageListView.Size = new Size(786, 76);
             downloadTabPageListView.TabIndex = 0;
             downloadTabPageListView.UseCompatibleStateImageBehavior = false;
+            // 
+            // completeTabPage
+            // 
+            completeTabPage.Location = new Point(4, 26);
+            completeTabPage.Name = "completeTabPage";
+            completeTabPage.Padding = new Padding(3);
+            completeTabPage.Size = new Size(792, 82);
+            completeTabPage.TabIndex = 3;
+            completeTabPage.Text = "已完成任务列表";
+            completeTabPage.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
@@ -642,5 +659,6 @@
         private ToolStripButton renameToolStripButton;
         private ToolStripButton refreshToolStripButton;
         private ToolStripStatusLabel fileStatusToolStripStatusLabel;
+        private TabPage completeTabPage;
     }
 }

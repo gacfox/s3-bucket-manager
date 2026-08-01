@@ -38,6 +38,7 @@ namespace Gacfox.S3BucketManager.UI
 
         private ClipboardBuffer? _clipboard;
         private bool _actionsEnabled;
+        private ListViewItem? _contextItem;
 
         private class ClipboardItem
         {
@@ -381,37 +382,43 @@ namespace Gacfox.S3BucketManager.UI
             foreach (ListViewItem item in fileListView.CheckedItems)
             {
                 item.Checked = false;
-                TransferTask? task = null;
-                if (item.Tag is string folderPrefix)
-                {
-                    var folderName = folderPrefix.TrimEnd('/').Split('/').Last();
-                    task = new TransferTask
-                    {
-                        Direction = TransferDirection.Download,
-                        Profile = _currentProfile,
-                        BucketName = _currentBucket,
-                        DisplayName = folderName,
-                        SourcePrefix = folderPrefix,
-                        LocalTargetPath = Path.Combine(dialog.SelectedPath, folderName)
-                    };
-                }
-                else if (item.Tag is S3Object obj)
-                {
-                    var fileName = obj.Key.Split('/').Last();
-                    task = new TransferTask
-                    {
-                        Direction = TransferDirection.Download,
-                        Profile = _currentProfile,
-                        BucketName = _currentBucket,
-                        DisplayName = fileName,
-                        Key = obj.Key,
-                        TotalBytes = obj.Size ?? 0,
-                        LocalTargetPath = Path.Combine(dialog.SelectedPath, fileName)
-                    };
-                }
-                if (task != null) _transferManager.Enqueue(task);
+                EnqueueDownloadItem(item, dialog.SelectedPath);
             }
             taskTabControl.SelectedTab = downloadTabPage;
+        }
+
+        private void EnqueueDownloadItem(ListViewItem item, string targetDirectory)
+        {
+            if (_currentBucket == null || _currentProfile == null) return;
+            TransferTask? task = null;
+            if (item.Tag is string folderPrefix)
+            {
+                var folderName = folderPrefix.TrimEnd('/').Split('/').Last();
+                task = new TransferTask
+                {
+                    Direction = TransferDirection.Download,
+                    Profile = _currentProfile,
+                    BucketName = _currentBucket,
+                    DisplayName = folderName,
+                    SourcePrefix = folderPrefix,
+                    LocalTargetPath = Path.Combine(targetDirectory, folderName)
+                };
+            }
+            else if (item.Tag is S3Object obj)
+            {
+                var fileName = obj.Key.Split('/').Last();
+                task = new TransferTask
+                {
+                    Direction = TransferDirection.Download,
+                    Profile = _currentProfile,
+                    BucketName = _currentBucket,
+                    DisplayName = fileName,
+                    Key = obj.Key,
+                    TotalBytes = obj.Size ?? 0,
+                    LocalTargetPath = Path.Combine(targetDirectory, fileName)
+                };
+            }
+            if (task != null) _transferManager.Enqueue(task);
         }
 
         private void SetActionButtonsEnabled(bool enabled)
@@ -575,30 +582,31 @@ namespace Gacfox.S3BucketManager.UI
             var items = new List<ClipboardItem>();
             foreach (ListViewItem item in fileListView.CheckedItems)
             {
-                if (item.Tag is string folderPrefix)
-                    items.Add(new ClipboardItem
-                    {
-                        Name = folderPrefix.TrimEnd('/').Split('/').Last(),
-                        SourceKey = folderPrefix,
-                        IsFolder = true
-                    });
-                else if (item.Tag is S3Object obj)
-                    items.Add(new ClipboardItem
-                    {
-                        Name = obj.Key.Split('/').Last(),
-                        SourceKey = obj.Key,
-                        IsFolder = false
-                    });
+                var entry = CreateClipboardItem(item);
+                if (entry != null) items.Add(entry);
             }
             if (items.Count == 0)
             {
                 mainStripStatusLabel.Text = "请先勾选要操作的文件或文件夹";
                 return;
             }
+            BufferItems(items, isCut);
+        }
+
+        private void BufferContextItem(bool isCut)
+        {
+            if (_contextItem == null || _currentBucket == null || _currentProfile == null) return;
+            var entry = CreateClipboardItem(_contextItem);
+            if (entry == null) return;
+            BufferItems(new List<ClipboardItem> { entry }, isCut);
+        }
+
+        private void BufferItems(List<ClipboardItem> items, bool isCut)
+        {
             _clipboard = new ClipboardBuffer
             {
-                Profile = _currentProfile,
-                BucketName = _currentBucket,
+                Profile = _currentProfile!,
+                BucketName = _currentBucket!,
                 IsCut = isCut,
                 Items = items
             };
@@ -606,7 +614,26 @@ namespace Gacfox.S3BucketManager.UI
             mainStripStatusLabel.Text = isCut ? $"已剪切 {items.Count} 项" : $"已复制 {items.Count} 项";
         }
 
-        private async Task PasteAsync()
+        private static ClipboardItem? CreateClipboardItem(ListViewItem item)
+        {
+            if (item.Tag is string folderPrefix)
+                return new ClipboardItem
+                {
+                    Name = folderPrefix.TrimEnd('/').Split('/').Last(),
+                    SourceKey = folderPrefix,
+                    IsFolder = true
+                };
+            if (item.Tag is S3Object obj)
+                return new ClipboardItem
+                {
+                    Name = obj.Key.Split('/').Last(),
+                    SourceKey = obj.Key,
+                    IsFolder = false
+                };
+            return null;
+        }
+
+        private async Task PasteAsync(string targetPrefix)
         {
             if (_clipboard == null || _currentBucket == null || _currentProfile == null) return;
             if (_clipboard.Profile.Id != _currentProfile.Id)
@@ -633,7 +660,7 @@ namespace Gacfox.S3BucketManager.UI
                 {
                     try
                     {
-                        pasted += await PasteEntryAsync(client, _clipboard, entry);
+                        pasted += await PasteEntryAsync(client, _clipboard, entry, targetPrefix);
                     }
                     catch (Exception ex)
                     {
@@ -657,19 +684,19 @@ namespace Gacfox.S3BucketManager.UI
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-        private async Task<int> PasteEntryAsync(AmazonS3Client client, ClipboardBuffer buffer, ClipboardItem entry)
+        private async Task<int> PasteEntryAsync(AmazonS3Client client, ClipboardBuffer buffer, ClipboardItem entry, string targetPrefix)
         {
             var destName = entry.Name;
             var suffix = entry.IsFolder ? "/" : "";
             if (buffer.IsCut)
             {
-                if (buffer.BucketName == _currentBucket && _currentPrefix + destName + suffix == entry.SourceKey)
+                if (buffer.BucketName == _currentBucket && targetPrefix + destName + suffix == entry.SourceKey)
                     return 0;
                 if (entry.IsFolder && buffer.BucketName == _currentBucket
-                    && (_currentPrefix + destName + "/").StartsWith(entry.SourceKey))
+                    && (targetPrefix + destName + "/").StartsWith(entry.SourceKey))
                     throw new InvalidOperationException("不能将文件夹移动到其自身内部");
             }
-            else if (await ExistsAsync(client, _currentBucket!, _currentPrefix + destName + suffix, entry.IsFolder))
+            else if (await ExistsAsync(client, _currentBucket!, targetPrefix + destName + suffix, entry.IsFolder))
             {
                 destName = CopyName(destName, entry.IsFolder);
             }
@@ -680,14 +707,14 @@ namespace Gacfox.S3BucketManager.UI
                     SourceBucket = buffer.BucketName,
                     SourceKey = entry.SourceKey,
                     DestinationBucket = _currentBucket,
-                    DestinationKey = _currentPrefix + destName
+                    DestinationKey = targetPrefix + destName
                 });
                 if (buffer.IsCut)
                     await client.DeleteObjectAsync(buffer.BucketName, entry.SourceKey);
                 return 1;
             }
             var sourcePrefix = entry.SourceKey;
-            var targetPrefix = _currentPrefix + destName + "/";
+            var destPrefix = targetPrefix + destName + "/";
             var keys = await ListAllKeysAsync(client, buffer.BucketName, sourcePrefix);
             foreach (var key in keys)
             {
@@ -696,7 +723,7 @@ namespace Gacfox.S3BucketManager.UI
                     SourceBucket = buffer.BucketName,
                     SourceKey = key,
                     DestinationBucket = _currentBucket,
-                    DestinationKey = targetPrefix + key[sourcePrefix.Length..]
+                    DestinationKey = destPrefix + key[sourcePrefix.Length..]
                 });
             }
             if (buffer.IsCut)
@@ -720,12 +747,17 @@ namespace Gacfox.S3BucketManager.UI
                 mainStripStatusLabel.Text = "请先勾选要删除的文件或文件夹";
                 return;
             }
+            await DeleteItemsAsync(fileKeys, folderPrefixes);
+        }
+
+        private async Task DeleteItemsAsync(List<string> fileKeys, List<string> folderPrefixes)
+        {
             var message = $"将删除 {fileKeys.Count} 个文件";
             if (folderPrefixes.Count > 0)
                 message += $"、{folderPrefixes.Count} 个文件夹及其全部内容";
             if (MessageBox.Show(this, message + "，是否继续？", "确认删除",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
-            var credentials = _store.GetCredentials(_currentProfile.Id);
+            var credentials = _store.GetCredentials(_currentProfile!.Id);
             if (credentials == null)
             {
                 MessageBox.Show(this, $"连接“{_currentProfile.Name}”缺少凭据，请删除后重新添加。", "错误",
@@ -747,7 +779,7 @@ namespace Gacfox.S3BucketManager.UI
                 {
                     try
                     {
-                        foreach (var key in await ListAllKeysAsync(client, _currentBucket, prefix))
+                        foreach (var key in await ListAllKeysAsync(client, _currentBucket!, prefix))
                             await client.DeleteObjectAsync(_currentBucket, key);
                     }
                     catch (Exception ex) { errors.Add($"{prefix}：{ex.Message}"); }
@@ -772,7 +804,12 @@ namespace Gacfox.S3BucketManager.UI
                 mainStripStatusLabel.Text = "请先勾选一个要重命名的文件或文件夹";
                 return;
             }
-            var item = fileListView.CheckedItems[0];
+            await RenameItemAsync(fileListView.CheckedItems[0]);
+        }
+
+        private async Task RenameItemAsync(ListViewItem item)
+        {
+            if (_currentBucket == null || _currentProfile == null) return;
             string oldName, sourceKey;
             bool isFolder;
             if (item.Tag is string folderPrefix)
@@ -919,7 +956,7 @@ namespace Gacfox.S3BucketManager.UI
 
         private void cutToolStripMenuItem_Click(object sender, EventArgs e) => BufferCheckedItems(true);
 
-        private async void pasteToolStripMenuItem_Click(object sender, EventArgs e) => await PasteAsync();
+        private async void pasteToolStripMenuItem_Click(object sender, EventArgs e) => await PasteAsync(_currentPrefix);
 
         private async void deleteToolStripMenuItem_Click(object sender, EventArgs e) => await DeleteCheckedItemsAsync();
 
@@ -946,10 +983,93 @@ namespace Gacfox.S3BucketManager.UI
 
         private void cutToolStripButton_Click(object sender, EventArgs e) => BufferCheckedItems(true);
 
-        private async void pasteToolStripButton_Click(object sender, EventArgs e) => await PasteAsync();
+        private async void pasteToolStripButton_Click(object sender, EventArgs e) => await PasteAsync(_currentPrefix);
 
         private async void deleteToolStripButton_Click(object sender, EventArgs e) => await DeleteCheckedItemsAsync();
 
         private async void renameToolStripButton_Click(object sender, EventArgs e) => await RenameCheckedItemAsync();
+
+        private void fileListView_MouseDown(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right) return;
+            var hit = fileListView.HitTest(e.Location);
+            if (hit.Item == null) return;
+            _contextItem = hit.Item;
+            fileListView.SelectedItems.Clear();
+            hit.Item.Selected = true;
+            pasteContextStripMenuItem.Enabled = _clipboard != null;
+            genLinkContextStripMenuItem.Enabled = hit.Item.Tag is S3Object;
+            fileContextMenuStrip.Show(fileListView, e.Location);
+        }
+
+        private void copyContextStripMenuItem_Click(object sender, EventArgs e) => BufferContextItem(false);
+
+        private void cutContextStripMenuItem_Click(object sender, EventArgs e) => BufferContextItem(true);
+
+        private async void pasteContextStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextItem == null) return;
+            var targetPrefix = _contextItem.Tag is string folderPrefix ? folderPrefix : _currentPrefix;
+            await PasteAsync(targetPrefix);
+        }
+
+        private async void deleteContextStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextItem == null) return;
+            if (_contextItem.Tag is string folderPrefix)
+                await DeleteItemsAsync(new List<string>(), new List<string> { folderPrefix });
+            else if (_contextItem.Tag is S3Object obj)
+                await DeleteItemsAsync(new List<string> { obj.Key }, new List<string>());
+        }
+
+        private async void renameContextStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextItem != null) await RenameItemAsync(_contextItem);
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void downloadContextStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextItem == null || _currentBucket == null || _currentProfile == null) return;
+            using var dialog = new FolderBrowserDialog { Description = "选择下载保存位置" };
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            EnqueueDownloadItem(_contextItem, dialog.SelectedPath);
+            taskTabControl.SelectedTab = downloadTabPage;
+        }
+
+        private void genLinkContextStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextItem?.Tag is not S3Object obj) return;
+            if (_currentBucket == null || _currentProfile == null) return;
+            var credentials = _store.GetCredentials(_currentProfile.Id);
+            if (credentials == null)
+            {
+                MessageBox.Show(this, $"连接“{_currentProfile.Name}”缺少凭据，请删除后重新添加。", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            try
+            {
+                using var client = S3ClientFactory.Create(_currentProfile, credentials);
+                var url = client.GetPreSignedURL(new GetPreSignedUrlRequest
+                {
+                    BucketName = _currentBucket,
+                    Key = obj.Key,
+                    Verb = HttpVerb.GET,
+                    Expires = DateTime.UtcNow.AddDays(7)
+                });
+                Clipboard.SetText(url);
+                mainStripStatusLabel.Text = "下载链接已复制到剪贴板（有效期 7 天）";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"生成链接失败：{ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 }

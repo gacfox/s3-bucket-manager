@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             mainMenuStrip = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
@@ -83,6 +84,15 @@
             downloadTabPageListView = new ListView();
             completeTabPage = new TabPage();
             completeTabPageListView = new ListView();
+            fileContextMenuStrip = new ContextMenuStrip(components);
+            copyContextStripMenuItem = new ToolStripMenuItem();
+            cutContextStripMenuItem = new ToolStripMenuItem();
+            pasteContextStripMenuItem = new ToolStripMenuItem();
+            deleteContextStripMenuItem = new ToolStripMenuItem();
+            renameContextStripMenuItem = new ToolStripMenuItem();
+            contextStripSeparator = new ToolStripSeparator();
+            downloadContextStripMenuItem = new ToolStripMenuItem();
+            genLinkContextStripMenuItem = new ToolStripMenuItem();
             mainMenuStrip.SuspendLayout();
             mainToolStrip.SuspendLayout();
             mainStatusStrip.SuspendLayout();
@@ -100,6 +110,7 @@
             uploadTabPage.SuspendLayout();
             downloadTabPage.SuspendLayout();
             completeTabPage.SuspendLayout();
+            fileContextMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
             // mainMenuStrip
@@ -475,6 +486,7 @@
             fileListView.TabIndex = 1;
             fileListView.UseCompatibleStateImageBehavior = false;
             fileListView.DoubleClick += fileListView_DoubleClick;
+            fileListView.MouseDown += fileListView_MouseDown;
             // 
             // fileInfoPanel
             // 
@@ -578,6 +590,66 @@
             completeTabPageListView.TabIndex = 0;
             completeTabPageListView.UseCompatibleStateImageBehavior = false;
             // 
+            // fileContextMenuStrip
+            // 
+            fileContextMenuStrip.Items.AddRange(new ToolStripItem[] { copyContextStripMenuItem, cutContextStripMenuItem, pasteContextStripMenuItem, deleteContextStripMenuItem, renameContextStripMenuItem, contextStripSeparator, downloadContextStripMenuItem, genLinkContextStripMenuItem });
+            fileContextMenuStrip.Name = "fileContextMenuStrip";
+            fileContextMenuStrip.Size = new Size(125, 164);
+            // 
+            // copyContextStripMenuItem
+            // 
+            copyContextStripMenuItem.Name = "copyContextStripMenuItem";
+            copyContextStripMenuItem.Size = new Size(124, 22);
+            copyContextStripMenuItem.Text = "复制";
+            copyContextStripMenuItem.Click += copyContextStripMenuItem_Click;
+            // 
+            // cutContextStripMenuItem
+            // 
+            cutContextStripMenuItem.Name = "cutContextStripMenuItem";
+            cutContextStripMenuItem.Size = new Size(124, 22);
+            cutContextStripMenuItem.Text = "剪切";
+            cutContextStripMenuItem.Click += cutContextStripMenuItem_Click;
+            // 
+            // pasteContextStripMenuItem
+            // 
+            pasteContextStripMenuItem.Name = "pasteContextStripMenuItem";
+            pasteContextStripMenuItem.Size = new Size(124, 22);
+            pasteContextStripMenuItem.Text = "粘贴";
+            pasteContextStripMenuItem.Click += pasteContextStripMenuItem_Click;
+            // 
+            // deleteContextStripMenuItem
+            // 
+            deleteContextStripMenuItem.Name = "deleteContextStripMenuItem";
+            deleteContextStripMenuItem.Size = new Size(124, 22);
+            deleteContextStripMenuItem.Text = "删除";
+            deleteContextStripMenuItem.Click += deleteContextStripMenuItem_Click;
+            // 
+            // renameContextStripMenuItem
+            // 
+            renameContextStripMenuItem.Name = "renameContextStripMenuItem";
+            renameContextStripMenuItem.Size = new Size(124, 22);
+            renameContextStripMenuItem.Text = "重命名";
+            renameContextStripMenuItem.Click += renameContextStripMenuItem_Click;
+            // 
+            // contextStripSeparator
+            // 
+            contextStripSeparator.Name = "contextStripSeparator";
+            contextStripSeparator.Size = new Size(121, 6);
+            // 
+            // downloadContextStripMenuItem
+            // 
+            downloadContextStripMenuItem.Name = "downloadContextStripMenuItem";
+            downloadContextStripMenuItem.Size = new Size(124, 22);
+            downloadContextStripMenuItem.Text = "下载";
+            downloadContextStripMenuItem.Click += downloadContextStripMenuItem_Click;
+            // 
+            // genLinkContextStripMenuItem
+            // 
+            genLinkContextStripMenuItem.Name = "genLinkContextStripMenuItem";
+            genLinkContextStripMenuItem.Size = new Size(124, 22);
+            genLinkContextStripMenuItem.Text = "生成链接";
+            genLinkContextStripMenuItem.Click += genLinkContextStripMenuItem_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
@@ -591,6 +663,7 @@
             MainMenuStrip = mainMenuStrip;
             Name = "MainForm";
             Text = "S3 Bucket Manager";
+            Load += MainForm_Load;
             mainMenuStrip.ResumeLayout(false);
             mainMenuStrip.PerformLayout();
             mainToolStrip.ResumeLayout(false);
@@ -614,6 +687,7 @@
             uploadTabPage.ResumeLayout(false);
             downloadTabPage.ResumeLayout(false);
             completeTabPage.ResumeLayout(false);
+            fileContextMenuStrip.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -674,5 +748,14 @@
         private ToolStripStatusLabel fileStatusToolStripStatusLabel;
         private TabPage completeTabPage;
         private ListView completeTabPageListView;
+        private ContextMenuStrip fileContextMenuStrip;
+        private ToolStripMenuItem copyContextStripMenuItem;
+        private ToolStripMenuItem cutContextStripMenuItem;
+        private ToolStripMenuItem pasteContextStripMenuItem;
+        private ToolStripMenuItem deleteContextStripMenuItem;
+        private ToolStripMenuItem renameContextStripMenuItem;
+        private ToolStripMenuItem downloadContextStripMenuItem;
+        private ToolStripMenuItem genLinkContextStripMenuItem;
+        private ToolStripSeparator contextStripSeparator;
     }
 }

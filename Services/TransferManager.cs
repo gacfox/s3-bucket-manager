@@ -6,12 +6,12 @@ namespace Gacfox.S3BucketManager.Services
 {
     public class TransferManager
     {
-        private const int MaxConcurrent = 3;
         private const int UploadPartSize = 8 * 1024 * 1024;
         private const int DownloadChunkSize = 4 * 1024 * 1024;
 
         private readonly ConnectionStore _store;
-        private readonly SemaphoreSlim _slots = new(MaxConcurrent, MaxConcurrent);
+        private SemaphoreSlim _uploadSlots;
+        private SemaphoreSlim _downloadSlots;
 
         public event Action<TransferTask>? TaskAdded;
         public event Action<TransferTask>? TaskUpdated;
@@ -20,6 +20,14 @@ namespace Gacfox.S3BucketManager.Services
         public TransferManager(ConnectionStore store)
         {
             _store = store;
+            _uploadSlots = new SemaphoreSlim(store.Settings.UploadConcurrency);
+            _downloadSlots = new SemaphoreSlim(store.Settings.DownloadConcurrency);
+        }
+
+        public void UpdateConcurrency(int upload, int download)
+        {
+            _uploadSlots = new SemaphoreSlim(upload);
+            _downloadSlots = new SemaphoreSlim(download);
         }
 
         public void Enqueue(TransferTask task)
@@ -71,7 +79,8 @@ namespace Gacfox.S3BucketManager.Services
 
         private async Task RunAsync(TransferTask task)
         {
-            await _slots.WaitAsync();
+            var slots = task.Direction == TransferDirection.Upload ? _uploadSlots : _downloadSlots;
+            await slots.WaitAsync();
             try
             {
                 if (task.Status != TransferStatus.Pending) return;
@@ -103,7 +112,7 @@ namespace Gacfox.S3BucketManager.Services
             }
             finally
             {
-                _slots.Release();
+                slots.Release();
             }
         }
 

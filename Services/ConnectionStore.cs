@@ -20,6 +20,8 @@ namespace Gacfox.S3BucketManager.Services
 
         public List<ConnectionProfile> Connections { get; } = new();
 
+        public AppSettings Settings { get; private set; } = new();
+
         private readonly List<ConnectionCredentials> _credentials = new();
 
         public static ConnectionStore Load()
@@ -30,6 +32,8 @@ namespace Gacfox.S3BucketManager.Services
                 var data = JsonSerializer.Deserialize<ConfigData>(File.ReadAllText(ConfigPath), JsonOptions);
                 if (data?.Connections != null)
                     store.Connections.AddRange(data.Connections);
+                if (data?.Settings != null)
+                    store.Settings = data.Settings;
             }
             if (File.Exists(VaultPath))
             {
@@ -61,11 +65,13 @@ namespace Gacfox.S3BucketManager.Services
             Save();
         }
 
+        public void SaveSettings() => Save();
+
         private void Save()
         {
             Directory.CreateDirectory(DataDirectory);
             File.WriteAllText(ConfigPath, JsonSerializer.Serialize(
-                new ConfigData { Connections = Connections }, JsonOptions));
+                new ConfigData { Connections = Connections, Settings = Settings }, JsonOptions));
             var protectedBytes = ProtectedData.Protect(
                 Encoding.UTF8.GetBytes(JsonSerializer.Serialize(_credentials, JsonOptions)), null, DataProtectionScope.CurrentUser);
             File.WriteAllText(VaultPath, Convert.ToBase64String(protectedBytes));
@@ -74,6 +80,7 @@ namespace Gacfox.S3BucketManager.Services
         private class ConfigData
         {
             public List<ConnectionProfile> Connections { get; set; } = new();
+            public AppSettings Settings { get; set; } = new();
         }
     }
 }

@@ -964,7 +964,12 @@ namespace Gacfox.S3BucketManager.UI
 
         private void propertiesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            using var dialog = new PropertiesDialog(_store.Settings);
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            _store.SaveSettings();
+            _transferManager.UpdateConcurrency(
+                _store.Settings.UploadConcurrency, _store.Settings.DownloadConcurrency);
+            mainStripStatusLabel.Text = "设置已保存";
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1060,10 +1065,11 @@ namespace Gacfox.S3BucketManager.UI
                     BucketName = _currentBucket,
                     Key = obj.Key,
                     Verb = HttpVerb.GET,
-                    Expires = DateTime.UtcNow.AddDays(7)
+                    Expires = DateTime.UtcNow.AddSeconds(_store.Settings.LinkExpirationSeconds)
                 });
                 Clipboard.SetText(url);
-                mainStripStatusLabel.Text = "下载链接已复制到剪贴板（有效期 7 天）";
+                mainStripStatusLabel.Text =
+                    $"下载链接已复制到剪贴板（有效期 {FormatDuration(_store.Settings.LinkExpirationSeconds)}）";
             }
             catch (Exception ex)
             {
@@ -1071,5 +1077,13 @@ namespace Gacfox.S3BucketManager.UI
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private static string FormatDuration(int seconds) => seconds switch
+        {
+            >= 86400 => $"{seconds / 86400.0:0.#} 天",
+            >= 3600 => $"{seconds / 3600.0:0.#} 小时",
+            >= 60 => $"{seconds / 60} 分钟",
+            _ => $"{seconds} 秒"
+        };
     }
 }

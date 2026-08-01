@@ -32,18 +32,18 @@
             tableLayoutPanel = new TableLayoutPanel();
             nameLabel = new Label();
             nameTextBox = new TextBox();
-            akLabel = new Label();
-            skLabel = new Label();
-            useSecureSslLabel = new Label();
-            akTextBox = new TextBox();
             useSecureSslCheckBox = new CheckBox();
             skTextBox = new TextBox();
+            akTextBox = new TextBox();
+            useSecureSslLabel = new Label();
+            skLabel = new Label();
+            akLabel = new Label();
+            apiEndpointLabel = new Label();
+            apiEndpointTextBox = new TextBox();
             buttonGroupFlowLayoutPanel = new FlowLayoutPanel();
             cancelButton = new Button();
             confirmButton = new Button();
             testConnectionButton = new Button();
-            apiEndpointLabel = new Label();
-            apiEndpointTextBox = new TextBox();
             tableLayoutPanel.SuspendLayout();
             buttonGroupFlowLayoutPanel.SuspendLayout();
             SuspendLayout();
@@ -95,47 +95,6 @@
             nameTextBox.Size = new Size(282, 23);
             nameTextBox.TabIndex = 1;
             // 
-            // akLabel
-            // 
-            akLabel.AutoSize = true;
-            akLabel.Dock = DockStyle.Fill;
-            akLabel.Location = new Point(3, 60);
-            akLabel.Name = "akLabel";
-            akLabel.Size = new Size(125, 30);
-            akLabel.TabIndex = 2;
-            akLabel.Text = "Access Key ID";
-            akLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // skLabel
-            // 
-            skLabel.AutoSize = true;
-            skLabel.Dock = DockStyle.Fill;
-            skLabel.Location = new Point(3, 90);
-            skLabel.Name = "skLabel";
-            skLabel.Size = new Size(125, 30);
-            skLabel.TabIndex = 3;
-            skLabel.Text = "Secret Key";
-            skLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // useSecureSslLabel
-            // 
-            useSecureSslLabel.AutoSize = true;
-            useSecureSslLabel.Dock = DockStyle.Fill;
-            useSecureSslLabel.Location = new Point(3, 120);
-            useSecureSslLabel.Name = "useSecureSslLabel";
-            useSecureSslLabel.Size = new Size(125, 30);
-            useSecureSslLabel.TabIndex = 4;
-            useSecureSslLabel.Text = "安全传输（SSL/TLS）";
-            useSecureSslLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // akTextBox
-            // 
-            akTextBox.Dock = DockStyle.Fill;
-            akTextBox.Location = new Point(134, 63);
-            akTextBox.Name = "akTextBox";
-            akTextBox.Size = new Size(282, 23);
-            akTextBox.TabIndex = 5;
-            // 
             // useSecureSslCheckBox
             // 
             useSecureSslCheckBox.Anchor = AnchorStyles.Left;
@@ -154,6 +113,66 @@
             skTextBox.PasswordChar = '*';
             skTextBox.Size = new Size(282, 23);
             skTextBox.TabIndex = 6;
+            // 
+            // akTextBox
+            // 
+            akTextBox.Dock = DockStyle.Fill;
+            akTextBox.Location = new Point(134, 63);
+            akTextBox.Name = "akTextBox";
+            akTextBox.Size = new Size(282, 23);
+            akTextBox.TabIndex = 5;
+            // 
+            // useSecureSslLabel
+            // 
+            useSecureSslLabel.AutoSize = true;
+            useSecureSslLabel.Dock = DockStyle.Fill;
+            useSecureSslLabel.Location = new Point(3, 120);
+            useSecureSslLabel.Name = "useSecureSslLabel";
+            useSecureSslLabel.Size = new Size(125, 30);
+            useSecureSslLabel.TabIndex = 4;
+            useSecureSslLabel.Text = "安全传输（SSL/TLS）";
+            useSecureSslLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // skLabel
+            // 
+            skLabel.AutoSize = true;
+            skLabel.Dock = DockStyle.Fill;
+            skLabel.Location = new Point(3, 90);
+            skLabel.Name = "skLabel";
+            skLabel.Size = new Size(125, 30);
+            skLabel.TabIndex = 3;
+            skLabel.Text = "Secret Key";
+            skLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // akLabel
+            // 
+            akLabel.AutoSize = true;
+            akLabel.Dock = DockStyle.Fill;
+            akLabel.Location = new Point(3, 60);
+            akLabel.Name = "akLabel";
+            akLabel.Size = new Size(125, 30);
+            akLabel.TabIndex = 2;
+            akLabel.Text = "Access Key ID";
+            akLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // apiEndpointLabel
+            // 
+            apiEndpointLabel.AutoSize = true;
+            apiEndpointLabel.Dock = DockStyle.Fill;
+            apiEndpointLabel.Location = new Point(3, 30);
+            apiEndpointLabel.Name = "apiEndpointLabel";
+            apiEndpointLabel.Size = new Size(125, 30);
+            apiEndpointLabel.TabIndex = 8;
+            apiEndpointLabel.Text = "API端点";
+            apiEndpointLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // apiEndpointTextBox
+            // 
+            apiEndpointTextBox.Dock = DockStyle.Fill;
+            apiEndpointTextBox.Location = new Point(134, 33);
+            apiEndpointTextBox.Name = "apiEndpointTextBox";
+            apiEndpointTextBox.Size = new Size(282, 23);
+            apiEndpointTextBox.TabIndex = 9;
             // 
             // buttonGroupFlowLayoutPanel
             // 
@@ -178,6 +197,7 @@
             cancelButton.Text = "取消";
             cancelButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             cancelButton.UseVisualStyleBackColor = true;
+            cancelButton.Click += cancelButton_Click;
             // 
             // confirmButton
             // 
@@ -190,6 +210,7 @@
             confirmButton.Text = "确认";
             confirmButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             confirmButton.UseVisualStyleBackColor = true;
+            confirmButton.Click += confirmButton_Click;
             // 
             // testConnectionButton
             // 
@@ -202,35 +223,24 @@
             testConnectionButton.Text = "测试连接";
             testConnectionButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             testConnectionButton.UseVisualStyleBackColor = true;
-            // 
-            // apiEndpointLabel
-            // 
-            apiEndpointLabel.AutoSize = true;
-            apiEndpointLabel.Dock = DockStyle.Fill;
-            apiEndpointLabel.Location = new Point(3, 30);
-            apiEndpointLabel.Name = "apiEndpointLabel";
-            apiEndpointLabel.Size = new Size(125, 30);
-            apiEndpointLabel.TabIndex = 8;
-            apiEndpointLabel.Text = "API端点";
-            apiEndpointLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // apiEndpointTextBox
-            // 
-            apiEndpointTextBox.Dock = DockStyle.Fill;
-            apiEndpointTextBox.Location = new Point(134, 33);
-            apiEndpointTextBox.Name = "apiEndpointTextBox";
-            apiEndpointTextBox.Size = new Size(282, 23);
-            apiEndpointTextBox.TabIndex = 9;
+            testConnectionButton.Click += testConnectionButton_Click;
             // 
             // AddConnectionDialog
             // 
+            AcceptButton = confirmButton;
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
+            CancelButton = cancelButton;
             ClientSize = new Size(419, 189);
             Controls.Add(tableLayoutPanel);
             Controls.Add(buttonGroupFlowLayoutPanel);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "AddConnectionDialog";
+            ShowInTaskbar = false;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "添加连接";
             tableLayoutPanel.ResumeLayout(false);
             tableLayoutPanel.PerformLayout();

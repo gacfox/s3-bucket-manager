@@ -118,14 +118,14 @@
             // newConnectionToolStripMenuItem
             // 
             newConnectionToolStripMenuItem.Name = "newConnectionToolStripMenuItem";
-            newConnectionToolStripMenuItem.Size = new Size(180, 22);
+            newConnectionToolStripMenuItem.Size = new Size(124, 22);
             newConnectionToolStripMenuItem.Text = "新建连接";
             newConnectionToolStripMenuItem.Click += newConnectionToolStripMenuItem_Click;
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(180, 22);
+            exitToolStripMenuItem.Size = new Size(124, 22);
             exitToolStripMenuItem.Text = "退出";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
@@ -139,61 +139,61 @@
             // uploadToolStripMenuItem
             // 
             uploadToolStripMenuItem.Name = "uploadToolStripMenuItem";
-            uploadToolStripMenuItem.Size = new Size(180, 22);
+            uploadToolStripMenuItem.Size = new Size(112, 22);
             uploadToolStripMenuItem.Text = "上传";
             uploadToolStripMenuItem.Click += uploadToolStripMenuItem_Click;
             // 
             // downloadToolStripMenuItem
             // 
             downloadToolStripMenuItem.Name = "downloadToolStripMenuItem";
-            downloadToolStripMenuItem.Size = new Size(180, 22);
+            downloadToolStripMenuItem.Size = new Size(112, 22);
             downloadToolStripMenuItem.Text = "下载";
             downloadToolStripMenuItem.Click += downloadToolStripMenuItem_Click;
             // 
             // editToolStripSeparator1
             // 
             editToolStripSeparator1.Name = "editToolStripSeparator1";
-            editToolStripSeparator1.Size = new Size(177, 6);
+            editToolStripSeparator1.Size = new Size(109, 6);
             // 
             // selectAllToolStripMenuItem
             // 
             selectAllToolStripMenuItem.Name = "selectAllToolStripMenuItem";
-            selectAllToolStripMenuItem.Size = new Size(180, 22);
+            selectAllToolStripMenuItem.Size = new Size(112, 22);
             selectAllToolStripMenuItem.Text = "全选";
             selectAllToolStripMenuItem.Click += selectAllToolStripMenuItem_Click;
             // 
             // copyToolStripMenuItem
             // 
             copyToolStripMenuItem.Name = "copyToolStripMenuItem";
-            copyToolStripMenuItem.Size = new Size(180, 22);
+            copyToolStripMenuItem.Size = new Size(112, 22);
             copyToolStripMenuItem.Text = "复制";
             copyToolStripMenuItem.Click += copyToolStripMenuItem_Click;
             // 
             // cutToolStripMenuItem
             // 
             cutToolStripMenuItem.Name = "cutToolStripMenuItem";
-            cutToolStripMenuItem.Size = new Size(180, 22);
+            cutToolStripMenuItem.Size = new Size(112, 22);
             cutToolStripMenuItem.Text = "剪切";
             cutToolStripMenuItem.Click += cutToolStripMenuItem_Click;
             // 
             // pasteToolStripMenuItem
             // 
             pasteToolStripMenuItem.Name = "pasteToolStripMenuItem";
-            pasteToolStripMenuItem.Size = new Size(180, 22);
+            pasteToolStripMenuItem.Size = new Size(112, 22);
             pasteToolStripMenuItem.Text = "粘贴";
             pasteToolStripMenuItem.Click += pasteToolStripMenuItem_Click;
             // 
             // deleteToolStripMenuItem
             // 
             deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
-            deleteToolStripMenuItem.Size = new Size(180, 22);
+            deleteToolStripMenuItem.Size = new Size(112, 22);
             deleteToolStripMenuItem.Text = "删除";
             deleteToolStripMenuItem.Click += deleteToolStripMenuItem_Click;
             // 
             // renameToolStripMenuItem
             // 
             renameToolStripMenuItem.Name = "renameToolStripMenuItem";
-            renameToolStripMenuItem.Size = new Size(180, 22);
+            renameToolStripMenuItem.Size = new Size(112, 22);
             renameToolStripMenuItem.Text = "重命名";
             renameToolStripMenuItem.Click += renameToolStripMenuItem_Click;
             // 
@@ -208,7 +208,7 @@
             // 
             useLargeIconToolStripMenuItem.CheckOnClick = true;
             useLargeIconToolStripMenuItem.Name = "useLargeIconToolStripMenuItem";
-            useLargeIconToolStripMenuItem.Size = new Size(180, 22);
+            useLargeIconToolStripMenuItem.Size = new Size(124, 22);
             useLargeIconToolStripMenuItem.Text = "大图标";
             useLargeIconToolStripMenuItem.Click += useLargeIconToolStripMenuItem_Click;
             // 
@@ -216,7 +216,7 @@
             // 
             useSmallIconToolStripMenuItem.CheckOnClick = true;
             useSmallIconToolStripMenuItem.Name = "useSmallIconToolStripMenuItem";
-            useSmallIconToolStripMenuItem.Size = new Size(180, 22);
+            useSmallIconToolStripMenuItem.Size = new Size(124, 22);
             useSmallIconToolStripMenuItem.Text = "小图标";
             useSmallIconToolStripMenuItem.Click += useSmallIconToolStripMenuItem_Click;
             // 
@@ -224,7 +224,7 @@
             // 
             useListToolStripMenuItem.CheckOnClick = true;
             useListToolStripMenuItem.Name = "useListToolStripMenuItem";
-            useListToolStripMenuItem.Size = new Size(180, 22);
+            useListToolStripMenuItem.Size = new Size(124, 22);
             useListToolStripMenuItem.Text = "列表";
             useListToolStripMenuItem.Click += useListToolStripMenuItem_Click;
             // 
@@ -232,19 +232,19 @@
             // 
             useDetailToolStripMenuItem.CheckOnClick = true;
             useDetailToolStripMenuItem.Name = "useDetailToolStripMenuItem";
-            useDetailToolStripMenuItem.Size = new Size(180, 22);
+            useDetailToolStripMenuItem.Size = new Size(124, 22);
             useDetailToolStripMenuItem.Text = "详细信息";
             useDetailToolStripMenuItem.Click += useDetailToolStripMenuItem_Click;
             // 
             // viewToolStripSeparator1
             // 
             viewToolStripSeparator1.Name = "viewToolStripSeparator1";
-            viewToolStripSeparator1.Size = new Size(177, 6);
+            viewToolStripSeparator1.Size = new Size(121, 6);
             // 
             // refreshToolStripMenuItem
             // 
             refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
-            refreshToolStripMenuItem.Size = new Size(180, 22);
+            refreshToolStripMenuItem.Size = new Size(124, 22);
             refreshToolStripMenuItem.Text = "刷新";
             refreshToolStripMenuItem.Click += refreshToolStripMenuItem_Click;
             // 
@@ -258,7 +258,7 @@
             // propertiesToolStripMenuItem
             // 
             propertiesToolStripMenuItem.Name = "propertiesToolStripMenuItem";
-            propertiesToolStripMenuItem.Size = new Size(180, 22);
+            propertiesToolStripMenuItem.Size = new Size(100, 22);
             propertiesToolStripMenuItem.Text = "选项";
             propertiesToolStripMenuItem.Click += propertiesToolStripMenuItem_Click;
             // 
@@ -272,7 +272,7 @@
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new Size(180, 22);
+            aboutToolStripMenuItem.Size = new Size(100, 22);
             aboutToolStripMenuItem.Text = "关于";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
@@ -444,6 +444,7 @@
             bucketTreeView.Name = "bucketTreeView";
             bucketTreeView.Size = new Size(266, 262);
             bucketTreeView.TabIndex = 0;
+            bucketTreeView.NodeMouseDoubleClick += bucketTreeView_NodeMouseDoubleClick;
             // 
             // fileStatusStrip
             // 
@@ -595,7 +596,6 @@
         private ToolStripMenuItem exitToolStripMenuItem;
         private ToolStripMenuItem editToolStripMenuItem;
         private ToolStripMenuItem selectAllToolStripMenuItem;
-        private ToolStripMenuItem 反选ToolStripMenuItem;
         private ToolStripMenuItem copyToolStripMenuItem;
         private ToolStripMenuItem pasteToolStripMenuItem;
         private ToolStripMenuItem deleteToolStripMenuItem;
@@ -621,7 +621,6 @@
         private TextBox searchTextBox;
         private StatusStrip fileStatusStrip;
         private TabControl taskTabControl;
-        private TabPage tabPage1;
         private TabPage uploadTabPage;
         private TabPage downloadTabPage;
         private ListView uploadTabPageListView;

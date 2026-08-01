@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37516.0 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gacfox.S3BucketManager", "Gacfox.S3BucketManager.csproj", "{11D99595-59B7-4A65-8DF0-582CD4E7B031}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{11D99595-59B7-4A65-8DF0-582CD4E7B031}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11D99595-59B7-4A65-8DF0-582CD4E7B031}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11D99595-59B7-4A65-8DF0-582CD4E7B031}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11D99595-59B7-4A65-8DF0-582CD4E7B031}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DD8CC9D3-B426-481D-8FF7-111F50FDDB46}
+	EndGlobalSection
+EndGlobal

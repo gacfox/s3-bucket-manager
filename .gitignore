@@ -1,0 +1,57 @@
+# 编译输出与构建缓存
+[Bb]in/
+[Oo]bj/
+out/
+
+# IDE和用户个性化配置
+*.csproj.user
+*.vcxproj.user
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio运行和缓存目录
+.vs/
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.tlog
+
+# NuGet缓存与包
+*.nupkg
+# NuGet 还原缓存与生成配置文件
+project.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+
+# 调试输出与日志文件
+*.log
+*.tmp
+*.cache
+
+# 操作系统生成的文件
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Coding Agent
+AGENTS*.md
+CLAUDE*.md
+GEMINI*.md
+QWEN*.md
+.cursorrules
+.windsurfrules
+CODEX*.md
+.claude/
+.gemini/
+.cursor/
+.windsurf/
+.clinerules/
+.ai/
+.vibecache/

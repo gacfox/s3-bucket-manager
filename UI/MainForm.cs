@@ -960,10 +960,7 @@ namespace Gacfox.S3BucketManager.UI
             return dot > 0 ? name[..dot] + "_copy" + name[dot..] : name + "_copy";
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-        }
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e) => Close();
 
         private void uploadToolStripMenuItem_Click(object sender, EventArgs e) => StartUpload();
 

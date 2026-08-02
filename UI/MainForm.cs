@@ -39,6 +39,7 @@ namespace Gacfox.S3BucketManager.UI
         private ClipboardBuffer? _clipboard;
         private bool _actionsEnabled;
         private ListViewItem? _contextItem;
+        private TreeNode? _contextConnectionNode;
 
         private class ClipboardItem
         {
@@ -138,6 +139,11 @@ namespace Gacfox.S3BucketManager.UI
                 e.Node.Toggle();
                 return;
             }
+            await LoadConnectionBucketsAsync(e.Node, profile);
+        }
+
+        private async Task LoadConnectionBucketsAsync(TreeNode node, ConnectionProfile profile)
+        {
             if (!_loadingConnections.Add(profile.Id)) return;
             var credentials = _store.GetCredentials(profile.Id);
             if (credentials == null)
@@ -155,9 +161,9 @@ namespace Gacfox.S3BucketManager.UI
                 var response = await client.ListBucketsAsync();
                 var buckets = response.Buckets ?? new List<S3Bucket>();
                 foreach (var bucket in buckets.OrderBy(b => b.BucketName))
-                    e.Node.Nodes.Add(new TreeNode(bucket.BucketName, BucketImageIndex, BucketImageIndex)
+                    node.Nodes.Add(new TreeNode(bucket.BucketName, BucketImageIndex, BucketImageIndex)
                     { Tag = bucket.BucketName });
-                e.Node.Expand();
+                node.Expand();
                 mainStripStatusLabel.Text = $"{profile.Name}：共 {buckets.Count} 个存储桶";
             }
             catch (Exception ex)
@@ -175,6 +181,18 @@ namespace Gacfox.S3BucketManager.UI
 
         private async void bucketTreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
+            if (e.Button == MouseButtons.Right)
+            {
+                if (e.Node.Tag is not ConnectionProfile) return;
+                _contextConnectionNode = e.Node;
+                bucketTreeView.SelectedNode = e.Node;
+                var connected = e.Node.Nodes.Count > 0;
+                connectContextStripMenuItem.Enabled = !connected;
+                disconnectContextStripMenuItem.Enabled = connected;
+                reconnectContextStripMenuItem.Enabled = connected;
+                connectionContextMenuStrip.Show(bucketTreeView, e.Location);
+                return;
+            }
             if (e.Button != MouseButtons.Left) return;
             if (e.Node.Tag is not string bucketName) return;
             if (e.Node.Parent?.Tag is not ConnectionProfile profile) return;
@@ -1085,5 +1103,53 @@ namespace Gacfox.S3BucketManager.UI
             >= 60 => $"{seconds / 60} 分钟",
             _ => $"{seconds} 秒"
         };
+
+        private async void connectContextStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextConnectionNode?.Tag is not ConnectionProfile profile) return;
+            await LoadConnectionBucketsAsync(_contextConnectionNode, profile);
+        }
+
+        private void disconnectContextStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextConnectionNode?.Tag is not ConnectionProfile profile) return;
+            _contextConnectionNode.Nodes.Clear();
+            _contextConnectionNode.Collapse();
+            if (_currentProfile?.Id == profile.Id)
+                ResetCurrentView();
+            mainStripStatusLabel.Text = $"已断开 {profile.Name}";
+        }
+
+        private async void reconnectContextStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextConnectionNode?.Tag is not ConnectionProfile profile) return;
+            _contextConnectionNode.Nodes.Clear();
+            await LoadConnectionBucketsAsync(_contextConnectionNode, profile);
+        }
+
+        private void deleteConnectContextStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextConnectionNode?.Tag is not ConnectionProfile profile) return;
+            if (MessageBox.Show(this, $"将删除连接“{profile.Name}”及其保存的凭据，是否继续？", "确认删除",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+            if (_currentProfile?.Id == profile.Id)
+                ResetCurrentView();
+            _store.Remove(profile.Id);
+            _contextConnectionNode.Remove();
+        }
+
+        private void ResetCurrentView()
+        {
+            _loadVersion++;
+            _currentProfile = null;
+            _currentBucket = null;
+            _currentPrefix = "";
+            _activeSearch = null;
+            fileListView.Items.Clear();
+            locationTextBox.Text = "/";
+            searchTextBox.Clear();
+            fileStatusToolStripStatusLabel.Text = "共 0 项";
+            SetActionButtonsEnabled(false);
+        }
     }
 }

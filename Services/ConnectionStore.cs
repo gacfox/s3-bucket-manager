@@ -67,6 +67,13 @@ public class ConnectionStore
 
     public void SaveSettings() => Save();
 
+    public void Remove(Guid connectionId)
+    {
+        Connections.RemoveAll(c => c.Id == connectionId);
+        _credentials.RemoveAll(c => c.ConnectionId == connectionId);
+        Save();
+    }
+
     private void Save()
     {
         Directory.CreateDirectory(DataDirectory);

@@ -93,6 +93,11 @@
             contextStripSeparator = new ToolStripSeparator();
             downloadContextStripMenuItem = new ToolStripMenuItem();
             genLinkContextStripMenuItem = new ToolStripMenuItem();
+            connectionContextMenuStrip = new ContextMenuStrip(components);
+            connectContextStripMenuItem = new ToolStripMenuItem();
+            disconnectContextStripMenuItem = new ToolStripMenuItem();
+            reconnectContextStripMenuItem = new ToolStripMenuItem();
+            deleteConnectContextStripMenuItem = new ToolStripMenuItem();
             mainMenuStrip.SuspendLayout();
             mainToolStrip.SuspendLayout();
             mainStatusStrip.SuspendLayout();
@@ -111,6 +116,7 @@
             downloadTabPage.SuspendLayout();
             completeTabPage.SuspendLayout();
             fileContextMenuStrip.SuspendLayout();
+            connectionContextMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
             // mainMenuStrip
@@ -650,6 +656,40 @@
             genLinkContextStripMenuItem.Text = "生成链接";
             genLinkContextStripMenuItem.Click += genLinkContextStripMenuItem_Click;
             // 
+            // connectionContextMenuStrip
+            // 
+            connectionContextMenuStrip.Items.AddRange(new ToolStripItem[] { connectContextStripMenuItem, disconnectContextStripMenuItem, reconnectContextStripMenuItem, deleteConnectContextStripMenuItem });
+            connectionContextMenuStrip.Name = "connectionContextMenuStrip";
+            connectionContextMenuStrip.Size = new Size(181, 114);
+            // 
+            // connectContextStripMenuItem
+            // 
+            connectContextStripMenuItem.Name = "connectContextStripMenuItem";
+            connectContextStripMenuItem.Size = new Size(180, 22);
+            connectContextStripMenuItem.Text = "连接";
+            connectContextStripMenuItem.Click += connectContextStripMenuItem_Click;
+            // 
+            // disconnectContextStripMenuItem
+            // 
+            disconnectContextStripMenuItem.Name = "disconnectContextStripMenuItem";
+            disconnectContextStripMenuItem.Size = new Size(180, 22);
+            disconnectContextStripMenuItem.Text = "断开连接";
+            disconnectContextStripMenuItem.Click += disconnectContextStripMenuItem_Click;
+            // 
+            // reconnectContextStripMenuItem
+            // 
+            reconnectContextStripMenuItem.Name = "reconnectContextStripMenuItem";
+            reconnectContextStripMenuItem.Size = new Size(180, 22);
+            reconnectContextStripMenuItem.Text = "重新连接";
+            reconnectContextStripMenuItem.Click += reconnectContextStripMenuItem_Click;
+            // 
+            // deleteConnectContextStripMenuItem
+            // 
+            deleteConnectContextStripMenuItem.Name = "deleteConnectContextStripMenuItem";
+            deleteConnectContextStripMenuItem.Size = new Size(180, 22);
+            deleteConnectContextStripMenuItem.Text = "删除连接";
+            deleteConnectContextStripMenuItem.Click += deleteConnectContextStripMenuItem_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
@@ -688,6 +728,7 @@
             downloadTabPage.ResumeLayout(false);
             completeTabPage.ResumeLayout(false);
             fileContextMenuStrip.ResumeLayout(false);
+            connectionContextMenuStrip.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -757,5 +798,10 @@
         private ToolStripMenuItem downloadContextStripMenuItem;
         private ToolStripMenuItem genLinkContextStripMenuItem;
         private ToolStripSeparator contextStripSeparator;
+        private ContextMenuStrip connectionContextMenuStrip;
+        private ToolStripMenuItem connectContextStripMenuItem;
+        private ToolStripMenuItem disconnectContextStripMenuItem;
+        private ToolStripMenuItem reconnectContextStripMenuItem;
+        private ToolStripMenuItem deleteConnectContextStripMenuItem;
     }
 }

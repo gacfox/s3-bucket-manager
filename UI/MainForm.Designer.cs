@@ -98,6 +98,7 @@
             disconnectContextStripMenuItem = new ToolStripMenuItem();
             reconnectContextStripMenuItem = new ToolStripMenuItem();
             deleteConnectContextStripMenuItem = new ToolStripMenuItem();
+            editContextStripMenuItem = new ToolStripMenuItem();
             mainMenuStrip.SuspendLayout();
             mainToolStrip.SuspendLayout();
             mainStatusStrip.SuspendLayout();
@@ -658,37 +659,44 @@
             // 
             // connectionContextMenuStrip
             // 
-            connectionContextMenuStrip.Items.AddRange(new ToolStripItem[] { connectContextStripMenuItem, disconnectContextStripMenuItem, reconnectContextStripMenuItem, deleteConnectContextStripMenuItem });
+            connectionContextMenuStrip.Items.AddRange(new ToolStripItem[] { connectContextStripMenuItem, editContextStripMenuItem, disconnectContextStripMenuItem, reconnectContextStripMenuItem, deleteConnectContextStripMenuItem });
             connectionContextMenuStrip.Name = "connectionContextMenuStrip";
-            connectionContextMenuStrip.Size = new Size(181, 114);
+            connectionContextMenuStrip.Size = new Size(125, 114);
             // 
             // connectContextStripMenuItem
             // 
             connectContextStripMenuItem.Name = "connectContextStripMenuItem";
-            connectContextStripMenuItem.Size = new Size(180, 22);
+            connectContextStripMenuItem.Size = new Size(124, 22);
             connectContextStripMenuItem.Text = "连接";
             connectContextStripMenuItem.Click += connectContextStripMenuItem_Click;
             // 
             // disconnectContextStripMenuItem
             // 
             disconnectContextStripMenuItem.Name = "disconnectContextStripMenuItem";
-            disconnectContextStripMenuItem.Size = new Size(180, 22);
+            disconnectContextStripMenuItem.Size = new Size(124, 22);
             disconnectContextStripMenuItem.Text = "断开连接";
             disconnectContextStripMenuItem.Click += disconnectContextStripMenuItem_Click;
             // 
             // reconnectContextStripMenuItem
             // 
             reconnectContextStripMenuItem.Name = "reconnectContextStripMenuItem";
-            reconnectContextStripMenuItem.Size = new Size(180, 22);
+            reconnectContextStripMenuItem.Size = new Size(124, 22);
             reconnectContextStripMenuItem.Text = "重新连接";
             reconnectContextStripMenuItem.Click += reconnectContextStripMenuItem_Click;
             // 
             // deleteConnectContextStripMenuItem
             // 
             deleteConnectContextStripMenuItem.Name = "deleteConnectContextStripMenuItem";
-            deleteConnectContextStripMenuItem.Size = new Size(180, 22);
+            deleteConnectContextStripMenuItem.Size = new Size(124, 22);
             deleteConnectContextStripMenuItem.Text = "删除连接";
             deleteConnectContextStripMenuItem.Click += deleteConnectContextStripMenuItem_Click;
+            // 
+            // editContextStripMenuItem
+            // 
+            editContextStripMenuItem.Name = "editContextStripMenuItem";
+            editContextStripMenuItem.Size = new Size(124, 22);
+            editContextStripMenuItem.Text = "编辑连接";
+            editContextStripMenuItem.Click += editContextStripMenuItem_Click;
             // 
             // MainForm
             // 
@@ -803,5 +811,6 @@
         private ToolStripMenuItem disconnectContextStripMenuItem;
         private ToolStripMenuItem reconnectContextStripMenuItem;
         private ToolStripMenuItem deleteConnectContextStripMenuItem;
+        private ToolStripMenuItem editContextStripMenuItem;
     }
 }

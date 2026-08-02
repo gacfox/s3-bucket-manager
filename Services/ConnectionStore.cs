@@ -67,6 +67,16 @@ public class ConnectionStore
 
     public void SaveSettings() => Save();
 
+    public void Update(ConnectionProfile profile, ConnectionCredentials credentials)
+    {
+        var index = Connections.FindIndex(c => c.Id == profile.Id);
+        if (index >= 0) Connections[index] = profile;
+        credentials.ConnectionId = profile.Id;
+        _credentials.RemoveAll(c => c.ConnectionId == profile.Id);
+        _credentials.Add(credentials);
+        Save();
+    }
+
     public void Remove(Guid connectionId)
     {
         Connections.RemoveAll(c => c.Id == connectionId);

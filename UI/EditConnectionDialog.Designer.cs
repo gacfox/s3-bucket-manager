@@ -1,6 +1,6 @@
 ﻿namespace Gacfox.S3BucketManager.UI
 {
-    partial class AddConnectionDialog
+    partial class EditConnectionDialog
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddConnectionDialog));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditConnectionDialog));
             tableLayoutPanel = new TableLayoutPanel();
             nameLabel = new Label();
             nameTextBox = new TextBox();
@@ -225,7 +225,7 @@
             testConnectionButton.UseVisualStyleBackColor = true;
             testConnectionButton.Click += testConnectionButton_Click;
             // 
-            // AddConnectionDialog
+            // EditConnectionDialog
             // 
             AcceptButton = confirmButton;
             AutoScaleDimensions = new SizeF(7F, 17F);
@@ -238,10 +238,10 @@
             Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
-            Name = "AddConnectionDialog";
+            Name = "EditConnectionDialog";
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterParent;
-            Text = "添加连接";
+            Text = "编辑连接";
             tableLayoutPanel.ResumeLayout(false);
             tableLayoutPanel.PerformLayout();
             buttonGroupFlowLayoutPanel.ResumeLayout(false);

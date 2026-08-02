@@ -12,15 +12,28 @@ using Gacfox.S3BucketManager.Services;
 
 namespace Gacfox.S3BucketManager.UI
 {
-    public partial class AddConnectionDialog : Form
+    public partial class EditConnectionDialog : Form
     {
         public ConnectionProfile? Profile { get; private set; }
         public ConnectionCredentials? Credentials { get; private set; }
 
-        public AddConnectionDialog()
+        private readonly Guid? _editingId;
+
+        public EditConnectionDialog()
         {
             InitializeComponent();
             useSecureSslCheckBox.Checked = true;
+        }
+
+        public EditConnectionDialog(ConnectionProfile profile, ConnectionCredentials credentials) : this()
+        {
+            _editingId = profile.Id;
+            Text = "编辑连接";
+            nameTextBox.Text = profile.Name;
+            apiEndpointTextBox.Text = profile.Endpoint;
+            useSecureSslCheckBox.Checked = profile.UseSsl;
+            akTextBox.Text = credentials.AccessKey;
+            skTextBox.Text = credentials.SecretKey;
         }
 
         private async void testConnectionButton_Click(object sender, EventArgs e)
@@ -83,6 +96,7 @@ namespace Gacfox.S3BucketManager.UI
 
         private ConnectionProfile BuildProfile() => new()
         {
+            Id = _editingId ?? Guid.NewGuid(),
             Name = nameTextBox.Text.Trim(),
             Endpoint = apiEndpointTextBox.Text.Trim(),
             UseSsl = useSecureSslCheckBox.Checked

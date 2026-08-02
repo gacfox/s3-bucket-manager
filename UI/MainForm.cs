@@ -121,7 +121,7 @@ namespace Gacfox.S3BucketManager.UI
 
         private void AddConnection()
         {
-            using var dialog = new AddConnectionDialog();
+            using var dialog = new EditConnectionDialog();
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
             var profile = dialog.Profile!;
             _store.Add(profile, dialog.Credentials!);
@@ -188,6 +188,7 @@ namespace Gacfox.S3BucketManager.UI
                 bucketTreeView.SelectedNode = e.Node;
                 var connected = e.Node.Nodes.Count > 0;
                 connectContextStripMenuItem.Enabled = !connected;
+                editContextStripMenuItem.Enabled = !connected;
                 disconnectContextStripMenuItem.Enabled = connected;
                 reconnectContextStripMenuItem.Enabled = connected;
                 connectionContextMenuStrip.Show(bucketTreeView, e.Location);
@@ -1150,6 +1151,24 @@ namespace Gacfox.S3BucketManager.UI
             searchTextBox.Clear();
             fileStatusToolStripStatusLabel.Text = "共 0 项";
             SetActionButtonsEnabled(false);
+        }
+
+        private void editContextStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextConnectionNode?.Tag is not ConnectionProfile profile) return;
+            if (_contextConnectionNode.Nodes.Count > 0) return;
+            var credentials = _store.GetCredentials(profile.Id);
+            if (credentials == null)
+            {
+                MessageBox.Show(this, $"连接“{profile.Name}”缺少凭据，请删除后重新添加。", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            using var dialog = new EditConnectionDialog(profile, credentials);
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            _store.Update(dialog.Profile!, dialog.Credentials!);
+            _contextConnectionNode.Text = dialog.Profile!.Name;
+            _contextConnectionNode.Tag = dialog.Profile!;
         }
     }
 }

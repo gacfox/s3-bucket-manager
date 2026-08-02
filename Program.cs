@@ -1,14 +1,13 @@
 using Gacfox.S3BucketManager.UI;
 
-namespace Gacfox.S3BucketManager
+namespace Gacfox.S3BucketManager;
+
+internal static class Program
 {
-    internal static class Program
+    [STAThread]
+    static void Main()
     {
-        [STAThread]
-        static void Main()
-        {
-            ApplicationConfiguration.Initialize();
-            Application.Run(new MainForm());
-        }
+        ApplicationConfiguration.Initialize();
+        Application.Run(new MainForm());
     }
 }

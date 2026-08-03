@@ -112,7 +112,40 @@ namespace Gacfox.S3BucketManager.UI
             _transferManager.TaskAdded += t => BeginInvoke(new Action(() => OnTransferTaskAdded(t)));
             _transferManager.TaskUpdated += t => BeginInvoke(new Action(() => OnTransferTaskUpdated(t)));
             _transferManager.TaskFinished += t => BeginInvoke(new Action(() => OnTransferTaskFinished(t)));
+            _transferManager.PersistRequested += () => BeginInvoke(new Action(PersistActiveTasks));
+            RestorePersistedTasks();
             SetActionButtonsEnabled(false);
+        }
+
+        private void RestorePersistedTasks()
+        {
+            var restored = 0;
+            foreach (var snapshot in TransferStore.Load())
+            {
+                var profile = _store.Connections.FirstOrDefault(c => c.Id == snapshot.ConnectionId);
+                if (profile == null) continue;
+                _transferManager.Restore(TransferTask.FromSnapshot(snapshot, profile));
+                restored++;
+            }
+            if (restored > 0)
+                mainStripStatusLabel.Text = $"已恢复 {restored} 个未完成的传输任务，可手动继续";
+        }
+
+        private void PersistActiveTasks()
+        {
+            var snapshots = _taskRows.Values
+                .Select(item => item.Tag as TransferTask)
+                .Where(task => task != null
+                    && task.Status is TransferStatus.Pending or TransferStatus.Running or TransferStatus.Paused)
+                .Select(task => task!.ToSnapshot())
+                .ToList();
+            TransferStore.Save(snapshots);
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            PersistActiveTasks();
+            base.OnFormClosing(e);
         }
 
         private void newConnectionToolStripMenuItem_Click(object sender, EventArgs e) => AddConnection();

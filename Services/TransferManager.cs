@@ -16,6 +16,9 @@ public class TransferManager
     public event Action<TransferTask>? TaskAdded;
     public event Action<TransferTask>? TaskUpdated;
     public event Action<TransferTask>? TaskFinished;
+    public event Action? PersistRequested;
+
+    private DateTime _lastPersistRequest;
 
     public TransferManager(ConnectionStore store)
     {
@@ -33,7 +36,14 @@ public class TransferManager
     public void Enqueue(TransferTask task)
     {
         TaskAdded?.Invoke(task);
+        RequestPersist(true);
         _ = RunAsync(task);
+    }
+
+    public void Restore(TransferTask task)
+    {
+        task.Status = TransferStatus.Paused;
+        TaskAdded?.Invoke(task);
     }
 
     public void Pause(TransferTask task)
@@ -103,6 +113,8 @@ public class TransferManager
                 task.Status = TransferStatus.Completed;
             if (task.Status is TransferStatus.Completed or TransferStatus.Stopped)
                 FinishTask(task);
+            else if (task.Status == TransferStatus.Paused)
+                RaiseUpdated(task, true);
         }
         catch (Exception ex)
         {
@@ -118,7 +130,17 @@ public class TransferManager
 
     private async Task UploadCoreAsync(TransferTask task, AmazonS3Client client)
     {
-        task.TotalBytes = new FileInfo(task.LocalFilePath!).Length;
+        var length = new FileInfo(task.LocalFilePath!).Length;
+        if (task.UploadId != null && length != task.TotalBytes)
+        {
+            // 源文件在暂停期间被修改，丢弃已有分片状态重新上传
+            task.UploadId = null;
+            task.UploadedParts.Clear();
+        }
+        task.TotalBytes = length;
+        if (task.UploadedParts.Count > 0)
+            task.TransferredBytes = Math.Min(
+                task.UploadedParts.Count * (long)UploadPartSize, task.TotalBytes);
         if (task.TotalBytes == 0)
         {
             await client.PutObjectAsync(new PutObjectRequest
@@ -203,6 +225,16 @@ public class TransferManager
                 : Path.Combine(task.LocalTargetPath!,
                     key[task.SourcePrefix.Length..].Replace('/', Path.DirectorySeparatorChar));
             task.CurrentLocalPath = localPath;
+            if (task.CurrentFileOffset > 0)
+            {
+                var info = new FileInfo(localPath);
+                if (!info.Exists || info.Length < task.CurrentFileOffset)
+                {
+                    // 部分文件缺失或被截短，该文件从头下载
+                    task.TransferredBytes -= task.CurrentFileOffset;
+                    task.CurrentFileOffset = 0;
+                }
+            }
             Directory.CreateDirectory(Path.GetDirectoryName(localPath)!);
             using (var stream = new FileStream(localPath,
                 task.CurrentFileOffset == 0 ? FileMode.Create : FileMode.OpenOrCreate,
@@ -269,6 +301,14 @@ public class TransferManager
         if (!force && (DateTime.UtcNow - task.LastReportTime).TotalMilliseconds < 150) return;
         task.LastReportTime = DateTime.UtcNow;
         TaskUpdated?.Invoke(task);
+        RequestPersist(force);
+    }
+
+    private void RequestPersist(bool force)
+    {
+        if (!force && (DateTime.UtcNow - _lastPersistRequest).TotalSeconds < 2) return;
+        _lastPersistRequest = DateTime.UtcNow;
+        PersistRequested?.Invoke();
     }
 
     private void FinishTask(TransferTask task)

@@ -45,4 +45,54 @@ public class TransferTask
     internal long CurrentFileOffset;
     internal string? CurrentLocalPath;
     internal DateTime LastReportTime;
+
+    public TransferTaskSnapshot ToSnapshot() => new()
+    {
+        Id = Id,
+        Direction = (int)Direction,
+        ConnectionId = Profile.Id,
+        BucketName = BucketName,
+        DisplayName = DisplayName,
+        TotalBytes = TotalBytes,
+        TransferredBytes = TransferredBytes,
+        LocalFilePath = LocalFilePath,
+        Key = Key,
+        SourcePrefix = SourcePrefix,
+        LocalTargetPath = LocalTargetPath,
+        UploadId = UploadId,
+        UploadedParts = UploadedParts
+            .Select(p => new UploadPartSnapshot { PartNumber = p.PartNumber ?? 0, ETag = p.ETag }).ToList(),
+        DownloadFiles = DownloadFiles?
+            .Select(f => new DownloadFileSnapshot { Key = f.Key, Size = f.Value }).ToList(),
+        DownloadFileIndex = DownloadFileIndex,
+        CurrentFileOffset = CurrentFileOffset,
+        CurrentLocalPath = CurrentLocalPath
+    };
+
+    public static TransferTask FromSnapshot(TransferTaskSnapshot snapshot, ConnectionProfile profile)
+    {
+        var task = new TransferTask
+        {
+            Direction = (TransferDirection)snapshot.Direction,
+            Profile = profile,
+            BucketName = snapshot.BucketName,
+            DisplayName = snapshot.DisplayName,
+            LocalFilePath = snapshot.LocalFilePath,
+            Key = snapshot.Key,
+            SourcePrefix = snapshot.SourcePrefix,
+            LocalTargetPath = snapshot.LocalTargetPath,
+            TotalBytes = snapshot.TotalBytes,
+            TransferredBytes = snapshot.TransferredBytes,
+            Status = TransferStatus.Paused
+        };
+        task.UploadId = snapshot.UploadId;
+        foreach (var part in snapshot.UploadedParts)
+            task.UploadedParts.Add(new PartETag(part.PartNumber, part.ETag));
+        task.DownloadFiles = snapshot.DownloadFiles?
+            .Select(f => new KeyValuePair<string, long>(f.Key, f.Size)).ToList();
+        task.DownloadFileIndex = snapshot.DownloadFileIndex;
+        task.CurrentFileOffset = snapshot.CurrentFileOffset;
+        task.CurrentLocalPath = snapshot.CurrentLocalPath;
+        return task;
+    }
 }

@@ -95,10 +95,10 @@
             genLinkContextStripMenuItem = new ToolStripMenuItem();
             connectionContextMenuStrip = new ContextMenuStrip(components);
             connectContextStripMenuItem = new ToolStripMenuItem();
+            editContextStripMenuItem = new ToolStripMenuItem();
             disconnectContextStripMenuItem = new ToolStripMenuItem();
             reconnectContextStripMenuItem = new ToolStripMenuItem();
             deleteConnectContextStripMenuItem = new ToolStripMenuItem();
-            editContextStripMenuItem = new ToolStripMenuItem();
             mainMenuStrip.SuspendLayout();
             mainToolStrip.SuspendLayout();
             mainStatusStrip.SuspendLayout();
@@ -485,6 +485,7 @@
             // 
             // fileListView
             // 
+            fileListView.AllowDrop = true;
             fileListView.CheckBoxes = true;
             fileListView.Dock = DockStyle.Fill;
             fileListView.Location = new Point(0, 23);
@@ -492,6 +493,8 @@
             fileListView.Size = new Size(530, 239);
             fileListView.TabIndex = 1;
             fileListView.UseCompatibleStateImageBehavior = false;
+            fileListView.DragDrop += fileListView_DragDrop;
+            fileListView.DragEnter += fileListView_DragEnter;
             fileListView.DoubleClick += fileListView_DoubleClick;
             fileListView.MouseDown += fileListView_MouseDown;
             // 
@@ -670,6 +673,13 @@
             connectContextStripMenuItem.Text = "连接";
             connectContextStripMenuItem.Click += connectContextStripMenuItem_Click;
             // 
+            // editContextStripMenuItem
+            // 
+            editContextStripMenuItem.Name = "editContextStripMenuItem";
+            editContextStripMenuItem.Size = new Size(124, 22);
+            editContextStripMenuItem.Text = "编辑连接";
+            editContextStripMenuItem.Click += editContextStripMenuItem_Click;
+            // 
             // disconnectContextStripMenuItem
             // 
             disconnectContextStripMenuItem.Name = "disconnectContextStripMenuItem";
@@ -690,13 +700,6 @@
             deleteConnectContextStripMenuItem.Size = new Size(124, 22);
             deleteConnectContextStripMenuItem.Text = "删除连接";
             deleteConnectContextStripMenuItem.Click += deleteConnectContextStripMenuItem_Click;
-            // 
-            // editContextStripMenuItem
-            // 
-            editContextStripMenuItem.Name = "editContextStripMenuItem";
-            editContextStripMenuItem.Size = new Size(124, 22);
-            editContextStripMenuItem.Text = "编辑连接";
-            editContextStripMenuItem.Click += editContextStripMenuItem_Click;
             // 
             // MainForm
             // 

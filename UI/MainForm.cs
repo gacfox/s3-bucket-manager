@@ -405,8 +405,16 @@ namespace Gacfox.S3BucketManager.UI
             if (_currentBucket == null || _currentProfile == null) return;
             using var dialog = new OpenFileDialog { Title = "选择要上传的文件", Multiselect = true };
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
-            foreach (var file in dialog.FileNames)
+            EnqueueUploads(dialog.FileNames);
+        }
+
+        private void EnqueueUploads(IEnumerable<string> files)
+        {
+            if (_currentBucket == null || _currentProfile == null) return;
+            var any = false;
+            foreach (var file in files)
             {
+                any = true;
                 _transferManager.Enqueue(new TransferTask
                 {
                     Direction = TransferDirection.Upload,
@@ -418,7 +426,7 @@ namespace Gacfox.S3BucketManager.UI
                     TotalBytes = new FileInfo(file).Length
                 });
             }
-            taskTabControl.SelectedTab = uploadTabPage;
+            if (any) taskTabControl.SelectedTab = uploadTabPage;
         }
 
         private void StartDownload()
@@ -1213,6 +1221,24 @@ namespace Gacfox.S3BucketManager.UI
             _store.Update(dialog.Profile!, dialog.Credentials!);
             _contextConnectionNode.Text = dialog.Profile!.Name;
             _contextConnectionNode.Tag = dialog.Profile!;
+        }
+
+        private void fileListView_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = _currentBucket != null && e.Data?.GetDataPresent(DataFormats.FileDrop) == true
+                ? DragDropEffects.Copy
+                : DragDropEffects.None;
+        }
+
+        private void fileListView_DragDrop(object sender, DragEventArgs e)
+        {
+            if (_currentBucket == null) return;
+            if (e.Data?.GetData(DataFormats.FileDrop) is not string[] paths) return;
+            var files = paths.Where(p => !Directory.Exists(p)).ToList();
+            var skipped = paths.Length - files.Count;
+            EnqueueUploads(files);
+            if (skipped > 0)
+                mainStripStatusLabel.Text = $"已跳过 {skipped} 个文件夹（拖拽仅支持上传文件）";
         }
     }
 }

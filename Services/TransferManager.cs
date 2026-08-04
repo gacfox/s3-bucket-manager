@@ -10,8 +10,10 @@ public class TransferManager
     private const int DownloadChunkSize = 4 * 1024 * 1024;
 
     private readonly ConnectionStore _store;
-    private SemaphoreSlim _uploadSlots;
-    private SemaphoreSlim _downloadSlots;
+    private readonly SemaphoreSlim _uploadSlots;
+    private readonly SemaphoreSlim _downloadSlots;
+    private int _uploadConcurrency;
+    private int _downloadConcurrency;
 
     public event Action<TransferTask>? TaskAdded;
     public event Action<TransferTask>? TaskUpdated;
@@ -23,14 +25,37 @@ public class TransferManager
     public TransferManager(ConnectionStore store)
     {
         _store = store;
-        _uploadSlots = new SemaphoreSlim(store.Settings.UploadConcurrency);
-        _downloadSlots = new SemaphoreSlim(store.Settings.DownloadConcurrency);
+        _uploadConcurrency = store.Settings.UploadConcurrency;
+        _downloadConcurrency = store.Settings.DownloadConcurrency;
+        _uploadSlots = new SemaphoreSlim(_uploadConcurrency);
+        _downloadSlots = new SemaphoreSlim(_downloadConcurrency);
     }
 
     public void UpdateConcurrency(int upload, int download)
     {
-        _uploadSlots = new SemaphoreSlim(upload);
-        _downloadSlots = new SemaphoreSlim(download);
+        AdjustSlots(_uploadSlots, upload, ref _uploadConcurrency);
+        AdjustSlots(_downloadSlots, download, ref _downloadConcurrency);
+    }
+
+    private static void AdjustSlots(SemaphoreSlim slots, int target, ref int current)
+    {
+        var diff = target - current;
+        if (diff == 0) return;
+        current = target;
+        if (diff > 0)
+        {
+            slots.Release(diff);
+        }
+        else
+        {
+            // 后台永久占用多余槽位以降低并发，避免阻塞调用线程；
+            // 这些 WaitAsync 永不 Release，等效于缩减信号量容量
+            _ = Task.Run(async () =>
+            {
+                for (var i = 0; i < -diff; i++)
+                    await slots.WaitAsync();
+            });
+        }
     }
 
     public void Enqueue(TransferTask task)
@@ -56,6 +81,7 @@ public class TransferManager
         else if (task.Status == TransferStatus.Running)
         {
             task.PauseRequested = true;
+            RaiseUpdated(task, true);
         }
     }
 
@@ -84,7 +110,11 @@ public class TransferManager
             DiscardPartialFile(task);
             _ = AbortMultipartAsync(task);
         }
-        // Running 状态由传输循环在分片边界感知 StopRequested
+        else if (task.Status == TransferStatus.Running)
+        {
+            // 立即刷新 UI 为"停止中…"，传输循环在分片边界感知 StopRequested 后结束
+            RaiseUpdated(task, true);
+        }
     }
 
     private async Task RunAsync(TransferTask task)
@@ -163,7 +193,8 @@ public class TransferManager
             var read = await stream.ReadAsync(buffer, 0,
                 (int)Math.Min(UploadPartSize, task.TotalBytes - task.TransferredBytes));
             if (read == 0) break;
-            var response = await client.UploadPartAsync(new UploadPartRequest
+            var partStart = task.TransferredBytes;
+            var request = new UploadPartRequest
             {
                 BucketName = task.BucketName,
                 Key = task.Key,
@@ -171,9 +202,17 @@ public class TransferManager
                 PartNumber = partNumber,
                 PartSize = read,
                 InputStream = new MemoryStream(buffer, 0, read)
-            });
+            };
+            request.StreamTransferProgress += (_, e) =>
+            {
+                var delta = partStart + e.TransferredBytes - task.TransferredBytes;
+                if (delta <= 0) return;
+                task.TransferredBytes += delta;
+                RaiseUpdated(task);
+            };
+            var response = await client.UploadPartAsync(request);
             task.UploadedParts.Add(new PartETag(partNumber, response.ETag));
-            task.TransferredBytes += read;
+            task.TransferredBytes = partStart + read;
             partNumber++;
             RaiseUpdated(task);
         }
@@ -241,6 +280,7 @@ public class TransferManager
                 FileAccess.Write, FileShare.None))
             {
                 stream.Seek(task.CurrentFileOffset, SeekOrigin.Begin);
+                var copyBuffer = new byte[256 * 1024];
                 while (task.CurrentFileOffset < size)
                 {
                     if (CheckInterrupt(task)) return;
@@ -248,10 +288,15 @@ public class TransferManager
                     var end = Math.Min(start + DownloadChunkSize, size) - 1;
                     using var response = await client.GetObjectAsync(new GetObjectRequest
                     { BucketName = task.BucketName, Key = key, ByteRange = new ByteRange(start, end) });
-                    await response.ResponseStream.CopyToAsync(stream);
-                    task.CurrentFileOffset = end + 1;
-                    task.TransferredBytes += end - start + 1;
-                    RaiseUpdated(task);
+                    int copied;
+                    while ((copied = await response.ResponseStream.ReadAsync(copyBuffer, 0, copyBuffer.Length)) > 0)
+                    {
+                        await stream.WriteAsync(copyBuffer, 0, copied);
+                        task.CurrentFileOffset += copied;
+                        task.TransferredBytes += copied;
+                        RaiseUpdated(task);
+                        if (CheckInterrupt(task)) return;
+                    }
                 }
             }
             task.CurrentFileOffset = 0;

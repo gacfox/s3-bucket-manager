@@ -504,7 +504,6 @@ namespace Gacfox.S3BucketManager.UI
             listView.Columns.Add("操作", 50);
             listView.DrawColumnHeader += taskListView_DrawColumnHeader;
             listView.DrawItem += taskListView_DrawItem;
-            listView.DrawSubItem += taskListView_DrawSubItem;
             listView.MouseClick += taskListView_MouseClick;
         }
 
@@ -512,40 +511,53 @@ namespace Gacfox.S3BucketManager.UI
             => e.DrawDefault = true;
 
         private void taskListView_DrawItem(object? sender, DrawListViewItemEventArgs e)
-            => e.DrawDefault = true;
-
-        private void taskListView_DrawSubItem(object? sender, DrawListViewSubItemEventArgs e)
         {
-            if (e.Item?.Tag is not TransferTask task
-                || (e.ColumnIndex != TaskProgressColumnIndex && e.ColumnIndex != TaskActionColumnIndex))
+            e.DrawDefault = false;
+            var listView = (ListView)sender!;
+            var task = e.Item.Tag as TransferTask;
+            var selected = e.Item.Selected;
+            var textColor = selected ? SystemColors.HighlightText : SystemColors.WindowText;
+            var bounds = new Rectangle[listView.Columns.Count];
+            var x = e.Bounds.X;
+            for (var i = 0; i < bounds.Length; i++)
             {
-                e.DrawDefault = true;
-                return;
+                bounds[i] = new Rectangle(x, e.Bounds.Y, listView.Columns[i].Width, e.Bounds.Height);
+                x += listView.Columns[i].Width;
             }
-            using (var brush = new SolidBrush(e.Item.Selected ? SystemColors.Highlight : SystemColors.Window))
-                e.Graphics.FillRectangle(brush, e.Bounds);
-            if (e.ColumnIndex == TaskProgressColumnIndex)
+            using (var brush = new SolidBrush(selected ? SystemColors.Highlight : SystemColors.Window))
+                e.Graphics.FillRectangle(brush,
+                    new Rectangle(e.Bounds.X, e.Bounds.Y, x - e.Bounds.X, e.Bounds.Height));
+            TextRenderer.DrawText(e.Graphics, e.Item.Text, listView.Font, bounds[0], textColor,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter
+                | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+            TextRenderer.DrawText(e.Graphics, e.Item.SubItems[1].Text, listView.Font, bounds[1], textColor,
+                TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
+            TextRenderer.DrawText(e.Graphics, e.Item.SubItems[3].Text, listView.Font, bounds[3], textColor,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
+            if (task == null) return;
+            var percent = task.TotalBytes > 0
+                ? Math.Clamp((int)(task.TransferredBytes * 100 / task.TotalBytes), 0, 100)
+                : 0;
+            var barBounds = new Rectangle(bounds[TaskProgressColumnIndex].X + 2,
+                bounds[TaskProgressColumnIndex].Y + 3,
+                bounds[TaskProgressColumnIndex].Width - 4,
+                bounds[TaskProgressColumnIndex].Height - 6);
+            if (ProgressBarRenderer.IsSupported)
             {
-                var percent = task.TotalBytes > 0 ? (int)(task.TransferredBytes * 100 / task.TotalBytes) : 0;
-                var barBounds = new Rectangle(e.Bounds.X + 2, e.Bounds.Y + 3, e.Bounds.Width - 4, e.Bounds.Height - 6);
-                if (ProgressBarRenderer.IsSupported)
-                {
-                    ProgressBarRenderer.DrawHorizontalBar(e.Graphics, barBounds);
-                    if (percent > 0)
-                        ProgressBarRenderer.DrawHorizontalChunks(e.Graphics,
-                            new Rectangle(barBounds.X, barBounds.Y, barBounds.Width * percent / 100, barBounds.Height));
-                }
-                TextRenderer.DrawText(e.Graphics, $"{percent}%", ((ListView)sender!).Font, e.Bounds,
-                    e.Item.Selected ? SystemColors.HighlightText : SystemColors.WindowText,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                ProgressBarRenderer.DrawHorizontalBar(e.Graphics, barBounds);
+                if (percent > 0)
+                    ProgressBarRenderer.DrawHorizontalChunks(e.Graphics,
+                        new Rectangle(barBounds.X, barBounds.Y,
+                            barBounds.Width * percent / 100, barBounds.Height));
             }
-            else
-            {
-                var y = e.Bounds.Y + (e.Bounds.Height - 16) / 2;
-                _actionImageList.Draw(e.Graphics, e.Bounds.X + 4, y,
-                    task.Status == TransferStatus.Paused ? 1 : 0);
-                _actionImageList.Draw(e.Graphics, e.Bounds.X + 24, y, 2);
-            }
+            TextRenderer.DrawText(e.Graphics, $"{percent}%", listView.Font,
+                bounds[TaskProgressColumnIndex], textColor,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
+            var iconY = bounds[TaskActionColumnIndex].Y
+                + (bounds[TaskActionColumnIndex].Height - 16) / 2;
+            _actionImageList.Draw(e.Graphics, bounds[TaskActionColumnIndex].X + 4, iconY,
+                task.Status == TransferStatus.Paused ? 1 : 0);
+            _actionImageList.Draw(e.Graphics, bounds[TaskActionColumnIndex].X + 24, iconY, 2);
         }
 
         private void taskListView_MouseClick(object? sender, MouseEventArgs e)
@@ -614,7 +626,9 @@ namespace Gacfox.S3BucketManager.UI
         private static string StatusText(TransferTask task) => task.Status switch
         {
             TransferStatus.Pending => "等待中",
-            TransferStatus.Running => task.Direction == TransferDirection.Upload ? "上传中" : "下载中",
+            TransferStatus.Running => task.PauseRequested ? "暂停中…"
+                : task.StopRequested ? "停止中…"
+                : task.Direction == TransferDirection.Upload ? "上传中" : "下载中",
             TransferStatus.Paused => "已暂停",
             TransferStatus.Completed => "已完成",
             TransferStatus.Stopped => "已停止",

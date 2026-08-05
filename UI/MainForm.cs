@@ -41,6 +41,8 @@ namespace Gacfox.S3BucketManager.UI
         private ListViewItem? _contextItem;
         private TreeNode? _contextConnectionNode;
 
+        private static readonly object ParentDirectoryTag = new();
+
         private class ClipboardItem
         {
             public required string Name { get; init; }
@@ -238,8 +240,18 @@ namespace Gacfox.S3BucketManager.UI
         private async void fileListView_DoubleClick(object sender, EventArgs e)
         {
             if (fileListView.SelectedItems.Count == 0) return;
-            if (fileListView.SelectedItems[0].Tag is string folderPrefix)
+            var tag = fileListView.SelectedItems[0].Tag;
+            if (ReferenceEquals(tag, ParentDirectoryTag))
+                await LoadObjectsAsync(ParentPrefix(_currentPrefix), null);
+            else if (tag is string folderPrefix)
                 await LoadObjectsAsync(folderPrefix, null);
+        }
+
+        private static string ParentPrefix(string prefix)
+        {
+            var trimmed = prefix.TrimEnd('/');
+            var index = trimmed.LastIndexOf('/');
+            return index < 0 ? "" : trimmed[..(index + 1)];
         }
 
         private async void locationTextBox_KeyDown(object sender, KeyEventArgs e)
@@ -327,6 +339,9 @@ namespace Gacfox.S3BucketManager.UI
                 {
                     searchTextBox.Clear();
                     locationTextBox.Text = DisplayPath(prefix);
+                    if (prefix.Length > 0)
+                        fileListView.Items.Add(new ListViewItem("..", FolderImageIndex)
+                        { Tag = ParentDirectoryTag });
                 }
                 foreach (var commonPrefix in commonPrefixes)
                     fileListView.Items.Add(new ListViewItem(commonPrefix[prefix.Length..].TrimEnd('/'), FolderImageIndex)
@@ -337,7 +352,8 @@ namespace Gacfox.S3BucketManager.UI
                     fileListView.Items.Add(CreateFileItem(obj, obj.Key[prefix.Length..]));
                 }
                 fileListView.EndUpdate();
-                fileStatusToolStripStatusLabel.Text = $"共 {fileListView.Items.Count} 项"
+                var shownCount = fileListView.Items.Count - (search == null && prefix.Length > 0 ? 1 : 0);
+                fileStatusToolStripStatusLabel.Text = $"共 {shownCount} 项"
                     + (response.IsTruncated == true ? "（结果过多，仅显示前1000项）" : "");
                 SetActionButtonsEnabled(true);
             }
@@ -1069,7 +1085,7 @@ namespace Gacfox.S3BucketManager.UI
         {
             if (e.Button != MouseButtons.Right) return;
             var hit = fileListView.HitTest(e.Location);
-            if (hit.Item == null) return;
+            if (hit.Item == null || ReferenceEquals(hit.Item.Tag, ParentDirectoryTag)) return;
             _contextItem = hit.Item;
             fileListView.SelectedItems.Clear();
             hit.Item.Selected = true;
